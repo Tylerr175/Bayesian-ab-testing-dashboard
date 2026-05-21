@@ -4,11 +4,10 @@ __pycache__/
 *.pyo
 
 # Virtual environments
-.venv/
-venv/
+backend/.venv/
 
 # Generated artifacts
-posteriors.png
+backend/posteriors.png
 
 # Frontend (for Phase 3)
 frontend/node_modules/
