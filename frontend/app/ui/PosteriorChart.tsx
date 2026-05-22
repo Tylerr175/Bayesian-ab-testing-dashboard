@@ -174,7 +174,7 @@ export default function PosteriorChart({ posteriorParams, credibleIntervals }: P
       </p>
 
       <div className="mt-5">
-        <ResponsiveContainer width="100%" height={260}>
+        <ResponsiveContainer width="100%" height={240}>
           <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
 

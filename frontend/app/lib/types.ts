@@ -5,6 +5,7 @@ export interface AnalyzePayload {
   a_conversions: number;
   b_visitors: number;
   b_conversions: number;
+  stop_threshold: number;
 }
 
 interface BetaParams        { alpha: number; beta: number }

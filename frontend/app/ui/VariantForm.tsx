@@ -3,7 +3,9 @@
 import { useState } from 'react';
 
 import type { AnalyzePayload, AnalyzeResponse } from '@/app/lib/types';
+import AdvancedSettings, { type ThresholdPreset, PRESET_VALUES } from '@/app/ui/AdvancedSettings';
 import ResultsPanel from '@/app/ui/ResultsPanel';
+import ResultsSkeleton from '@/app/ui/ResultsSkeleton';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -59,9 +61,8 @@ function validate(values: FormValues): FormErrors {
   if (aCErr) {
     errors.aConversions = aCErr;
   } else if (!aVErr) {
-    const aV = parseNonNegativeInt(values.aVisitors)!;
-    const aC = parseNonNegativeInt(values.aConversions)!;
-    if (aC > aV) errors.aConversions = 'Cannot exceed visitors';
+    if (parseNonNegativeInt(values.aConversions)! > parseNonNegativeInt(values.aVisitors)!)
+      errors.aConversions = 'Cannot exceed visitors';
   }
 
   const bVErr = validateField(values.bVisitors);
@@ -71,9 +72,8 @@ function validate(values: FormValues): FormErrors {
   if (bCErr) {
     errors.bConversions = bCErr;
   } else if (!bVErr) {
-    const bV = parseNonNegativeInt(values.bVisitors)!;
-    const bC = parseNonNegativeInt(values.bConversions)!;
-    if (bC > bV) errors.bConversions = 'Cannot exceed visitors';
+    if (parseNonNegativeInt(values.bConversions)! > parseNonNegativeInt(values.bVisitors)!)
+      errors.bConversions = 'Cannot exceed visitors';
   }
 
   return errors;
@@ -126,15 +126,16 @@ export default function VariantForm() {
     bConversions: '',
   });
 
-  const [errors, setErrors]     = useState<FormErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError]   = useState<string | null>(null);
-  const [result, setResult]       = useState<AnalyzeResponse | null>(null);
+  const [errors, setErrors]               = useState<FormErrors>({});
+  const [isLoading, setIsLoading]         = useState(false);
+  const [apiError, setApiError]           = useState<string | null>(null);
+  const [result, setResult]               = useState<AnalyzeResponse | null>(null);
+  const [thresholdPreset, setThresholdPreset] = useState<ThresholdPreset>('balanced');
+  const [customThreshold, setCustomThreshold] = useState('');
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
     setValues((prev) => ({ ...prev, [name]: value }));
-    // Clear the error for this field as soon as the user starts correcting it.
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
@@ -148,11 +149,25 @@ export default function VariantForm() {
       return;
     }
 
+    // Resolve the stopping threshold before building the payload
+    let stopThreshold: number;
+    if (thresholdPreset === 'custom') {
+      const v = parseFloat(customThreshold);
+      if (isNaN(v) || v <= 0) {
+        setApiError('Custom threshold is invalid — open Advanced Settings and enter a positive decimal like 0.005.');
+        return;
+      }
+      stopThreshold = v / 100;
+    } else {
+      stopThreshold = PRESET_VALUES[thresholdPreset];
+    }
+
     const payload: AnalyzePayload = {
       a_visitors:    parseNonNegativeInt(values.aVisitors)!,
       a_conversions: parseNonNegativeInt(values.aConversions)!,
       b_visitors:    parseNonNegativeInt(values.bVisitors)!,
       b_conversions: parseNonNegativeInt(values.bConversions)!,
+      stop_threshold: stopThreshold,
     };
 
     setIsLoading(true);
@@ -173,7 +188,6 @@ export default function VariantForm() {
 
       const data: AnalyzeResponse = await res.json();
       setResult(data);
-      console.log('Analysis result:', data);
     } catch (err) {
       setApiError(
         err instanceof TypeError
@@ -187,81 +201,65 @@ export default function VariantForm() {
 
   return (
     <>
-    <form onSubmit={handleSubmit} noValidate className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
-        {/* ── Variant A ── */}
-        <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-5">
-          <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-              Variant A
-            </h3>
+          {/* ── Variant A ── */}
+          <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-5">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+                Variant A
+              </h3>
+            </div>
+            <Field label="Visitors"    name="aVisitors"    value={values.aVisitors}    error={errors.aVisitors}    onChange={handleChange} />
+            <Field label="Conversions" name="aConversions" value={values.aConversions} error={errors.aConversions} onChange={handleChange} />
           </div>
-          <Field
-            label="Visitors"
-            name="aVisitors"
-            value={values.aVisitors}
-            error={errors.aVisitors}
-            onChange={handleChange}
-          />
-          <Field
-            label="Conversions"
-            name="aConversions"
-            value={values.aConversions}
-            error={errors.aConversions}
-            onChange={handleChange}
-          />
-        </div>
 
-        {/* ── Variant B ── */}
-        <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-5">
-          <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-violet-500" />
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-              Variant B
-            </h3>
+          {/* ── Variant B ── */}
+          <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-5">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-violet-500" />
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+                Variant B
+              </h3>
+            </div>
+            <Field label="Visitors"    name="bVisitors"    value={values.bVisitors}    error={errors.bVisitors}    onChange={handleChange} />
+            <Field label="Conversions" name="bConversions" value={values.bConversions} error={errors.bConversions} onChange={handleChange} />
           </div>
-          <Field
-            label="Visitors"
-            name="bVisitors"
-            value={values.bVisitors}
-            error={errors.bVisitors}
-            onChange={handleChange}
-          />
-          <Field
-            label="Conversions"
-            name="bConversions"
-            value={values.bConversions}
-            error={errors.bConversions}
-            onChange={handleChange}
-          />
+
         </div>
 
-      </div>
+        <AdvancedSettings
+          preset={thresholdPreset}
+          customValue={customThreshold}
+          onPresetChange={setThresholdPreset}
+          onCustomChange={setCustomThreshold}
+        />
 
-      {apiError && (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-sm text-red-700">{apiError}</p>
-        </div>
-      )}
+        {apiError && (
+          <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm text-red-700">{apiError}</p>
+          </div>
+        )}
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className={[
-          'w-full rounded-md px-4 py-2.5 text-sm font-semibold text-white shadow-sm',
-          'transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
-          isLoading
-            ? 'cursor-not-allowed bg-indigo-400'
-            : 'bg-indigo-600 hover:bg-indigo-500',
-        ].join(' ')}
-      >
-        {isLoading ? 'Analyzing…' : 'Run Analysis'}
-      </button>
-    </form>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className={[
+            'w-full rounded-md px-4 py-2.5 text-sm font-semibold text-white shadow-sm',
+            'transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
+            isLoading
+              ? 'cursor-not-allowed bg-indigo-400'
+              : 'bg-indigo-600 hover:bg-indigo-500',
+          ].join(' ')}
+        >
+          {isLoading ? 'Analyzing…' : 'Run Analysis'}
+        </button>
+      </form>
 
-    {result && <ResultsPanel result={result} />}
+      {isLoading && <ResultsSkeleton />}
+      {result && !isLoading && <ResultsPanel result={result} />}
     </>
   );
 }
