@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -17,11 +18,14 @@ logger = logging.getLogger(__name__)
 
 _started_at = datetime.now(timezone.utc)
 
-app = FastAPI(title="Bayesian A/B Testing Dashboard")
+app = FastAPI(title="BayesLab")
+
+_raw_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000")
+_allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=_allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

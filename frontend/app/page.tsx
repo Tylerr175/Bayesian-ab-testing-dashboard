@@ -14,7 +14,7 @@ export default function Home() {
             </div>
             <div>
               <h1 className="text-base font-semibold leading-tight text-slate-900 dark:text-slate-50">
-                Bayesian A/B Testing
+                BayesLab
               </h1>
               <p className="text-xs text-slate-400 dark:text-slate-500">Beta-Binomial model · No p-values</p>
             </div>

@@ -7,8 +7,8 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Bayesian A/B Testing Dashboard",
-  description: "Bayesian analysis of A/B test results using a Beta-Binomial model.",
+  title: "BayesLab",
+  description: "Bayesian A/B testing using a Beta-Binomial model. No p-values.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
