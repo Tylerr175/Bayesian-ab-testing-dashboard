@@ -15,7 +15,7 @@ type ActiveTab = 'manual' | 'csv';
 const MIN_VARIANTS  = 2;
 const MAX_VARIANTS  = 6;
 const DEFAULT_NAMES = ['A', 'B', 'C', 'D', 'E', 'F'];
-const API_URL       = 'http://localhost:8000/api/analyze';
+const API_URL       = `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}/api/analyze`;
 
 // Color palette — index matches PosteriorChart's PALETTE array
 const CARD_COLORS = [
