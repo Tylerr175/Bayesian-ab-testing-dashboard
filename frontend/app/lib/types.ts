@@ -1,32 +1,30 @@
 // Mirrors the Pydantic models in backend/main.py exactly.
 
 export interface AnalyzePayload {
-  a_visitors: number;
-  a_conversions: number;
-  b_visitors: number;
-  b_conversions: number;
+  variants: Array<{ name: string; visitors: number; conversions: number }>;
   stop_threshold: number;
 }
 
-interface BetaParams        { alpha: number; beta: number }
-interface VariantBetaParams { a: BetaParams; b: BetaParams }
-interface VariantFloats     { a: number; b: number }
+export interface BetaParams { alpha: number; beta: number }
 export interface Interval   { lower: number; upper: number }
-interface VariantIntervals  { a: Interval; b: Interval }
+
+export interface VariantResult {
+  name: string;
+  posterior_params: BetaParams;
+  posterior_mean: number;
+  credible_interval: Interval;
+  prob_best: number;
+  expected_loss: number;
+}
 
 export interface Recommendation {
   action: 'STOP' | 'KEEP_TESTING';
-  winner: 'A' | 'B' | null;
+  winner: string | null;  // variant name, or null when still testing
   winner_loss: number;
   threshold: number;
 }
 
 export interface AnalyzeResponse {
-  posterior_params: VariantBetaParams;
-  posterior_means: VariantFloats;
-  credible_intervals: VariantIntervals;
-  prob_b_better: number;
-  lift_ci: Interval;
-  expected_loss: VariantFloats;
+  variants: VariantResult[];
   recommendation: Recommendation;
 }
