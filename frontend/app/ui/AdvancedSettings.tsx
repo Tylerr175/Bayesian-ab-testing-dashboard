@@ -125,7 +125,7 @@ export default function AdvancedSettings({ preset, customValue, onPresetChange, 
                     type="text" inputMode="decimal" value={customValue}
                     onChange={(e) => onCustomChange(e.target.value)} placeholder="0.5"
                     className={[
-                      'w-24 rounded-md border px-2.5 py-1.5 text-sm shadow-sm',
+                      'w-24 rounded-md border px-2.5 py-1.5 text-sm font-mono tabular-nums shadow-sm',
                       'focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400',
                       customParseError
                         ? 'border-red-400 bg-red-50 text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-300'

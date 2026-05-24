@@ -110,7 +110,7 @@ export default function ResultsPanel({ result }: Props) {
 
       {/* ── Hero ── */}
       <div className="py-2 text-center">
-        <p className="text-5xl font-bold tracking-tight text-indigo-600 dark:text-indigo-400 sm:text-7xl">
+        <p className="font-mono text-5xl font-bold tabular-nums tracking-tight text-indigo-600 dark:text-indigo-400 sm:text-7xl">
           {pct(winnerVariant.prob_best, 1)}
         </p>
         <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 sm:text-base">

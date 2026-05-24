@@ -95,7 +95,7 @@ function CustomTooltip({ active, payload, label, colors }: {
   return (
     <div style={{ background: colors.tooltip.bg, border: `1px solid ${colors.tooltip.border}` }}
       className="rounded-lg px-3 py-2.5 shadow-lg">
-      <p style={{ color: colors.tooltip.label }} className="mb-2 text-xs font-semibold">
+      <p style={{ color: colors.tooltip.label }} className="mb-2 font-mono text-xs font-semibold tabular-nums">
         {((label ?? 0) * 100).toFixed(2)}% conversion rate
       </p>
       {payload.map((p) => (

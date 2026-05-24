@@ -117,7 +117,7 @@ function NumberField({ label, id, value, error, onChange }: {
         id={id} type="text" inputMode="numeric"
         value={value} onChange={e => onChange(e.target.value)} placeholder="0"
         className={[
-          'mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm',
+          'mt-1 block w-full rounded-md border px-3 py-2 text-sm font-mono tabular-nums shadow-sm',
           'focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400',
           error
             ? 'border-red-400 bg-red-50 text-red-900 placeholder-red-300 dark:border-red-700 dark:bg-red-950 dark:text-red-300 dark:placeholder-red-700'
@@ -344,7 +344,7 @@ export default function VariantForm() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
                   <span className="text-sm font-medium">Add Variant</span>
-                  <span className="text-xs opacity-60">{variants.length} / {MAX_VARIANTS}</span>
+                  <span className="font-mono tabular-nums text-xs opacity-60">{variants.length} / {MAX_VARIANTS}</span>
                 </button>
               )}
             </div>
