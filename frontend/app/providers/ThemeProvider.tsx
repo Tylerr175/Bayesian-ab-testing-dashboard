@@ -16,6 +16,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Sync React state with whatever the anti-FOUC script already applied
     const isDark = document.documentElement.classList.contains('dark');
     setTheme(isDark ? 'dark' : 'light');
+    // Enable bg/color transitions only after initial paint to avoid flashing
+    const id = requestAnimationFrame(() => {
+      document.documentElement.dataset.themeReady = 'true';
+    });
+    return () => cancelAnimationFrame(id);
   }, []);
 
   function toggle() {

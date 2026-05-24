@@ -140,7 +140,7 @@ export default function CsvUpload({ onParsed }: Props) {
     ? 'border-indigo-400 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-950'
     : loadedName
     ? 'border-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950 dark:hover:bg-emerald-900'
-    : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:hover:border-slate-500 dark:hover:bg-slate-700';
+    : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-slate-100 dark:border-zinc-600 dark:bg-zinc-800 dark:hover:border-zinc-500 dark:hover:bg-zinc-700';
 
   return (
     <div className="space-y-3">
@@ -163,13 +163,13 @@ export default function CsvUpload({ onParsed }: Props) {
           </>
         ) : (
           <>
-            <svg className="mx-auto h-8 w-8 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="mx-auto h-8 w-8 text-slate-400 dark:text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
-            <p className="mt-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+            <p className="mt-2 text-sm font-medium text-slate-700 dark:text-zinc-300">
               {isDragging ? 'Drop to upload' : 'Drag and drop a CSV file here'}
             </p>
-            <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">or click to browse</p>
+            <p className="mt-0.5 text-xs text-slate-400 dark:text-zinc-500">or click to browse</p>
           </>
         )}
         <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleInputChange} className="sr-only" />
@@ -181,12 +181,12 @@ export default function CsvUpload({ onParsed }: Props) {
         </div>
       )}
 
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs dark:border-slate-700 dark:bg-slate-800">
-        <p className="mb-3 font-semibold text-slate-600 dark:text-slate-300">Accepted formats</p>
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs dark:border-zinc-700 dark:bg-zinc-800">
+        <p className="mb-3 font-semibold text-slate-600 dark:text-zinc-300">Accepted formats</p>
         <div className="space-y-3">
           <div>
-            <p className="mb-1 text-slate-500 dark:text-slate-400">Format A — one row per variant (2–6 variants):</p>
-            <pre className="overflow-x-auto rounded border border-slate-200 bg-white px-3 py-2 font-mono leading-relaxed text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">{
+            <p className="mb-1 text-slate-500 dark:text-zinc-400">Format A — one row per variant (2–6 variants):</p>
+            <pre className="overflow-x-auto rounded border border-slate-200 bg-white px-3 py-2 font-mono leading-relaxed text-slate-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">{
 `variant,visitors,conversions
 A,1000,80
 B,1000,100
@@ -194,8 +194,8 @@ C,1000,92`
             }</pre>
           </div>
           <div>
-            <p className="mb-1 text-slate-500 dark:text-slate-400">Format B — single row (two variants only):</p>
-            <pre className="overflow-x-auto rounded border border-slate-200 bg-white px-3 py-2 font-mono leading-relaxed text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">{
+            <p className="mb-1 text-slate-500 dark:text-zinc-400">Format B — single row (two variants only):</p>
+            <pre className="overflow-x-auto rounded border border-slate-200 bg-white px-3 py-2 font-mono leading-relaxed text-slate-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">{
 `a_visitors,a_conversions,b_visitors,b_conversions
 1000,80,1000,100`
             }</pre>

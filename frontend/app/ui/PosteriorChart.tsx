@@ -59,28 +59,29 @@ function buildSeries(variants: VariantResult[]): ChartPoint[] {
 // ── Colour palette ─────────────────────────────────────────────────────────────
 
 const PALETTE = [
-  '#6366f1', // indigo-500 (A)
-  '#8b5cf6', // violet-500 (B)
-  '#06b6d4', // cyan-500   (C)
-  '#10b981', // emerald-500 (D)
-  '#f59e0b', // amber-500  (E)
-  '#ef4444', // red-500    (F)
+  '#6366f1', // indigo-500  (A)
+  '#10b981', // emerald-500 (B)
+  '#f59e0b', // amber-500   (C)
+  '#f43f5e', // rose-500    (D)
+  '#8b5cf6', // violet-500  (E)
+  '#06b6d4', // cyan-500    (F)
 ];
 
 // ── Theme-aware chart colours ──────────────────────────────────────────────────
+
+const MONO_FONT = 'var(--font-jetbrains-mono, ui-monospace, monospace)';
+
 const LIGHT = {
-  grid:      '#f1f5f9',
-  axis:      '#94a3b8',
-  axisLine:  '#e2e8f0',
+  grid:      '#e2e8f0', // slate-200
+  axis:      '#64748b', // slate-500
+  axisLine:  '#cbd5e1', // slate-300
   tooltip:   { bg: '#ffffff', border: '#e2e8f0', label: '#475569', text: '#64748b' },
-  legend:    '#64748b',
 };
 const DARK = {
-  grid:      '#1e293b',
-  axis:      '#475569',
-  axisLine:  '#334155',
-  tooltip:   { bg: '#1e293b', border: '#475569', label: '#cbd5e1', text: '#94a3b8' },
-  legend:    '#94a3b8',
+  grid:      '#27272a', // zinc-800
+  axis:      '#71717a', // zinc-500
+  axisLine:  '#3f3f46', // zinc-700
+  tooltip:   { bg: '#18181b', border: '#3f3f46', label: '#e4e4e7', text: '#a1a1aa' },
 };
 
 // ── Custom tooltip ─────────────────────────────────────────────────────────────
@@ -93,19 +94,30 @@ function CustomTooltip({ active, payload, label, colors }: {
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: colors.tooltip.bg, border: `1px solid ${colors.tooltip.border}` }}
-      className="rounded-lg px-3 py-2.5 shadow-lg">
-      <p style={{ color: colors.tooltip.label }} className="mb-2 font-mono text-xs font-semibold tabular-nums">
-        {((label ?? 0) * 100).toFixed(2)}% conversion rate
+    <div
+      style={{ background: colors.tooltip.bg, border: `1px solid ${colors.tooltip.border}` }}
+      className="rounded-lg p-3 shadow-md"
+    >
+      <p
+        style={{ color: colors.tooltip.label }}
+        className="mb-2 font-mono text-xs font-semibold tabular-nums"
+      >
+        {((label ?? 0) * 100).toFixed(2)}%
       </p>
-      {payload.map((p) => (
-        <p key={p.dataKey} className="text-xs" style={{ color: p.color }}>
-          {p.name}
-          <span style={{ color: colors.tooltip.text }} className="ml-2 tabular-nums">
-            density {p.value.toFixed(2)}
-          </span>
-        </p>
-      ))}
+      <div className="space-y-1">
+        {payload.map((p) => (
+          <div key={p.dataKey} className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: p.color }} />
+            <span className="text-xs" style={{ color: p.color }}>{p.name}</span>
+            <span
+              style={{ color: colors.tooltip.text }}
+              className="ml-auto font-mono text-xs tabular-nums"
+            >
+              {p.value.toFixed(2)}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -114,19 +126,23 @@ function CustomTooltip({ active, payload, label, colors }: {
 
 function CustomLegend({ variants, colors }: { variants: VariantResult[]; colors: typeof LIGHT }) {
   return (
-    <div className="mt-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs" style={{ color: colors.legend }}>
-      {variants.map((v, idx) => (
-        <span key={v.name} className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full"
-            style={{ background: PALETTE[idx % PALETTE.length] }} />
-          Variant {v.name}
-        </span>
-      ))}
-      <span className="flex items-center gap-1.5">
-        <span className="inline-block h-2.5 w-6 rounded-sm opacity-40"
-          style={{ background: 'repeating-linear-gradient(90deg,#6366f1 0 8px,#8b5cf6 8px 16px)' }} />
-        95% credible interval
-      </span>
+    <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+      {variants.map((v, idx) => {
+        const color = PALETTE[idx % PALETTE.length];
+        const mean  = posteriorMean(v.posterior_params.alpha, v.posterior_params.beta);
+        return (
+          <span key={v.name} className="flex items-center gap-1.5">
+            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />
+            <span className="text-xs text-slate-600 dark:text-zinc-400">Variant {v.name}</span>
+            <span
+              className="font-mono text-xs tabular-nums"
+              style={{ color: colors.axis }}
+            >
+              {(mean * 100).toFixed(2)}%
+            </span>
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -141,46 +157,58 @@ export default function PosteriorChart({ variants }: Props) {
   const { theme } = useTheme();
   const colors    = theme === 'dark' ? DARK : LIGHT;
 
-  const data      = buildSeries(variants);
-  const { lo, hi } = buildChartRange(variants);
-  const tickFmt   = (v: number) => `${(v * 100).toFixed(1)}%`;
+  const data        = buildSeries(variants);
+  const { lo, hi }  = buildChartRange(variants);
+  const tickFmt     = (v: number) => `${(v * 100).toFixed(1)}%`;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-6 pb-5 pt-6 dark:border-slate-700 dark:bg-slate-900">
-      <h3 className="text-sm font-semibold tracking-tight text-slate-800 dark:text-slate-200">
-        Posterior Conversion Rate Distributions
-      </h3>
-      <p className="mt-1 text-xs leading-relaxed text-slate-400 dark:text-slate-500">
-        Each curve shows the range of conversion rates consistent with the data observed so far.
-        Narrower = more certain.
+    <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+      {/* Header */}
+      <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-500">
+        Posterior Distributions
+      </p>
+      <p className="mt-1 text-xs text-slate-400 dark:text-zinc-600">
+        Each curve represents the plausible range of true conversion rates
       </p>
 
-      <div className="mt-5">
+      <div className="mt-6">
         <ResponsiveContainer width="100%" height={240}>
-          <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
+          <ComposedChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: 0 }}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={colors.grid}
+              strokeOpacity={0.5}
+              vertical={false}
+            />
             <XAxis
-              dataKey="x" type="number" domain={[lo, hi]}
-              tickFormatter={tickFmt} tickCount={7}
-              tick={{ fontSize: 11, fill: colors.axis }}
+              dataKey="x"
+              type="number"
+              domain={[lo, hi]}
+              tickFormatter={tickFmt}
+              tickCount={7}
+              tick={{ fontSize: 11, fill: colors.axis, fontFamily: MONO_FONT }}
               axisLine={{ stroke: colors.axisLine }}
               tickLine={false}
             />
             <YAxis hide />
             <Tooltip content={<CustomTooltip colors={colors} />} />
 
-            {/* Credible interval shading and mean lines for each variant */}
+            {/* Credible interval shading + posterior mean line per variant */}
             {variants.map((v, idx) => {
               const color = PALETTE[idx % PALETTE.length];
               const ci    = v.credible_interval;
               const mean  = posteriorMean(v.posterior_params.alpha, v.posterior_params.beta);
               return [
-                <ReferenceArea key={`ci-${v.name}`}
+                <ReferenceArea
+                  key={`ci-${v.name}`}
                   x1={ci.lower} x2={ci.upper}
-                  fill={color} fillOpacity={0.13} stroke="none" />,
-                <ReferenceLine key={`mean-${v.name}`}
-                  x={mean} stroke={color}
-                  strokeWidth={1.5} strokeDasharray="4 3" strokeOpacity={0.7} />,
+                  fill={color} fillOpacity={0.12} stroke="none"
+                />,
+                <ReferenceLine
+                  key={`mean-${v.name}`}
+                  x={mean}
+                  stroke={color} strokeWidth={1.5} strokeDasharray="4 3" strokeOpacity={0.7}
+                />,
               ];
             })}
 
@@ -188,12 +216,19 @@ export default function PosteriorChart({ variants }: Props) {
             {variants.map((v, idx) => {
               const color = PALETTE[idx % PALETTE.length];
               return (
-                <Area key={v.name}
-                  type="monotone" dataKey={`pdf${idx}`}
+                <Area
+                  key={v.name}
+                  type="monotone"
+                  dataKey={`pdf${idx}`}
                   name={`Variant ${v.name}`}
-                  stroke={color} strokeWidth={2.5}
+                  stroke={color} strokeWidth={2}
                   fill={color} fillOpacity={0.07}
-                  dot={false} activeDot={false} legendType="none" />
+                  dot={false} activeDot={false} legendType="none"
+                  isAnimationActive
+                  animationBegin={idx * 60}
+                  animationDuration={500}
+                  animationEasing="ease-out"
+                />
               );
             })}
 

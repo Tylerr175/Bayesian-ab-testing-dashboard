@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import type { AnalyzePayload, AnalyzeResponse } from '@/app/lib/types';
 import AdvancedSettings, { type ThresholdPreset, PRESET_VALUES } from '@/app/ui/AdvancedSettings';
@@ -20,11 +21,11 @@ const API_URL       = `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:80
 // Color palette — index matches PosteriorChart's PALETTE array
 const CARD_COLORS = [
   { dot: 'bg-indigo-500',  border: 'border-indigo-200 dark:border-indigo-800' },
-  { dot: 'bg-violet-500',  border: 'border-violet-200 dark:border-violet-800' },
-  { dot: 'bg-cyan-500',    border: 'border-cyan-200 dark:border-cyan-800'     },
   { dot: 'bg-emerald-500', border: 'border-emerald-200 dark:border-emerald-800' },
   { dot: 'bg-amber-500',   border: 'border-amber-200 dark:border-amber-800'   },
-  { dot: 'bg-red-500',     border: 'border-red-200 dark:border-red-800'       },
+  { dot: 'bg-rose-500',    border: 'border-rose-200 dark:border-rose-800'     },
+  { dot: 'bg-violet-500',  border: 'border-violet-200 dark:border-violet-800' },
+  { dot: 'bg-cyan-500',    border: 'border-cyan-200 dark:border-cyan-800'     },
 ];
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -40,17 +41,6 @@ type FieldErrors = { name?: string; visitors?: string; conversions?: string };
 type FormErrors  = Record<string, FieldErrors>;  // keyed by VariantField.id
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-
-let _counter = 0;
-function uid() { return `v${++_counter}`; }
-
-function makeVariant(idx: number): VariantField {
-  return { id: uid(), name: DEFAULT_NAMES[idx] ?? String(idx + 1), visitors: '', conversions: '' };
-}
-
-function defaultVariants(): VariantField[] {
-  return [makeVariant(0), makeVariant(1)];
-}
 
 function parseNonNegativeInt(raw: string): number | null {
   if (!/^\d+$/.test(raw.trim())) return null;
@@ -110,18 +100,18 @@ function NumberField({ label, id, value, error, onChange }: {
 }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+      <label htmlFor={id} className="block text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-500">
         {label}
       </label>
       <input
         id={id} type="text" inputMode="numeric"
         value={value} onChange={e => onChange(e.target.value)} placeholder="0"
         className={[
-          'mt-1 block w-full rounded-md border px-3 py-2 text-sm font-mono tabular-nums shadow-sm',
+          'mt-1.5 block h-11 w-full rounded-lg border px-4 text-sm font-mono tabular-nums',
           'focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400',
           error
             ? 'border-red-400 bg-red-50 text-red-900 placeholder-red-300 dark:border-red-700 dark:bg-red-950 dark:text-red-300 dark:placeholder-red-700'
-            : 'border-slate-300 bg-white text-slate-900 placeholder-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500',
+            : 'border-slate-300 bg-white text-slate-900 placeholder-slate-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-slate-500',
         ].join(' ')}
       />
       {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
@@ -135,10 +125,10 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
       type="button" onClick={onClick}
       className={[
         'flex-1 rounded-md py-1.5 text-sm font-medium transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400 dark:focus:ring-offset-zinc-900',
         active
-          ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
-          : 'text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300',
+          ? 'bg-white text-slate-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100'
+          : 'text-slate-500 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-slate-300',
       ].join(' ')}
     >
       {label}
@@ -149,9 +139,16 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function VariantForm() {
+  const baseId     = useId();
+  const counterRef = useRef(2); // 0 and 1 reserved for the two default variants
+  function uid() { return `${baseId}-${counterRef.current++}`; }
+
   const [activeTab,    setActiveTab]    = useState<ActiveTab>('manual');
   const [csvFilename,  setCsvFilename]  = useState<string | null>(null);
-  const [variants,     setVariants]     = useState<VariantField[]>(defaultVariants);
+  const [variants,     setVariants]     = useState<VariantField[]>([
+    { id: `${baseId}-0`, name: 'A', visitors: '', conversions: '' },
+    { id: `${baseId}-1`, name: 'B', visitors: '', conversions: '' },
+  ]);
   const [errors,       setErrors]       = useState<FormErrors>({});
   const [isLoading,    setIsLoading]    = useState(false);
   const [apiError,     setApiError]     = useState<string | null>(null);
@@ -169,7 +166,8 @@ export default function VariantForm() {
 
   function addVariant() {
     if (variants.length >= MAX_VARIANTS) return;
-    setVariants(prev => [...prev, makeVariant(prev.length)]);
+    const idx = variants.length;
+    setVariants(prev => [...prev, { id: uid(), name: DEFAULT_NAMES[idx] ?? String(idx + 1), visitors: '', conversions: '' }]);
   }
 
   function removeVariant(id: string) {
@@ -246,10 +244,10 @@ export default function VariantForm() {
 
   return (
     <>
-      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
 
         {/* ── Tab switcher ── */}
-        <div className="flex rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-zinc-800 dark:bg-zinc-950">
           <TabButton label="Manual Input" active={activeTab === 'manual'} onClick={() => setActiveTab('manual')} />
           <TabButton label="Upload CSV"   active={activeTab === 'csv'}    onClick={() => setActiveTab('csv')}    />
         </div>
@@ -270,17 +268,22 @@ export default function VariantForm() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <AnimatePresence initial={false}>
               {variants.map((v, idx) => {
                 const color = CARD_COLORS[idx % CARD_COLORS.length];
                 const errs  = errors[v.id];
                 return (
-                  <div key={v.id}
-                    className={`space-y-4 rounded-lg border p-5 bg-slate-50 dark:bg-slate-800 ${color.border}`}>
+                  <motion.div key={v.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className={`space-y-4 rounded-xl border p-5 bg-slate-50 dark:bg-zinc-800 ${color.border}`}>
 
                     {/* Card header: dot + editable name + remove button */}
                     <div className="flex items-center gap-2">
-                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${color.dot}`} />
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${color.dot}`} />
                       <input
                         type="text"
                         value={v.name}
@@ -289,16 +292,13 @@ export default function VariantForm() {
                         placeholder="Name"
                         aria-label="Variant name"
                         className={[
-                          'w-20 rounded border px-2 py-0.5 text-xs font-semibold uppercase tracking-widest',
-                          'focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400',
+                          'min-w-0 flex-1 border-0 bg-transparent text-base font-medium outline-none',
+                          'placeholder-slate-400 dark:placeholder-zinc-500',
                           errs?.name
-                            ? 'border-red-400 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950 dark:text-red-400'
-                            : 'border-slate-200 bg-white text-slate-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-400',
+                            ? 'text-red-700 dark:text-red-400'
+                            : 'text-slate-900 dark:text-zinc-100',
                         ].join(' ')}
                       />
-                      {errs?.name && (
-                        <span className="text-xs text-red-600 dark:text-red-400">{errs.name}</span>
-                      )}
                       {variants.length > MIN_VARIANTS && (
                         <button
                           type="button"
@@ -306,7 +306,7 @@ export default function VariantForm() {
                           aria-label={`Remove Variant ${v.name}`}
                           className={[
                             'ml-auto shrink-0 rounded p-0.5 text-slate-400 transition-colors',
-                            'hover:bg-slate-200 hover:text-slate-600 dark:hover:bg-slate-600 dark:hover:text-slate-300',
+                            'hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950/30 dark:hover:text-rose-400',
                             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
                           ].join(' ')}
                         >
@@ -316,6 +316,9 @@ export default function VariantForm() {
                         </button>
                       )}
                     </div>
+                    {errs?.name && (
+                      <p className="-mt-3 text-xs text-red-600 dark:text-red-400">{errs.name}</p>
+                    )}
 
                     <NumberField label="Visitors"    id={`${v.id}-visitors`}
                       value={v.visitors}    error={errs?.visitors}
@@ -323,28 +326,26 @@ export default function VariantForm() {
                     <NumberField label="Conversions" id={`${v.id}-conversions`}
                       value={v.conversions} error={errs?.conversions}
                       onChange={val => updateField(v.id, 'conversions', val)} />
-                  </div>
+                  </motion.div>
                 );
               })}
+              </AnimatePresence>
 
-              {/* Add Variant button — shown as a dashed placeholder card */}
+              {/* Add Variant — dashed ghost card matching variant card height */}
               {variants.length < MAX_VARIANTS && (
                 <button
                   type="button"
                   onClick={addVariant}
                   className={[
-                    'flex min-h-[188px] flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed',
+                    'flex min-h-[172px] flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed',
                     'border-slate-300 text-slate-400 transition-colors',
-                    'hover:border-indigo-400 hover:text-indigo-500',
-                    'dark:border-slate-600 dark:text-slate-500 dark:hover:border-indigo-500 dark:hover:text-indigo-400',
+                    'hover:border-indigo-400 hover:text-indigo-500 active:scale-[0.98]',
+                    'dark:border-zinc-700 dark:text-zinc-500 dark:hover:border-indigo-500 dark:hover:text-indigo-400',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400',
                   ].join(' ')}
                 >
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                  </svg>
-                  <span className="text-sm font-medium">Add Variant</span>
-                  <span className="font-mono tabular-nums text-xs opacity-60">{variants.length} / {MAX_VARIANTS}</span>
+                  <span className="text-sm font-medium">+ Add variant</span>
+                  <span className="font-mono tabular-nums text-xs opacity-50">{variants.length} / {MAX_VARIANTS}</span>
                 </button>
               )}
             </div>
@@ -366,19 +367,28 @@ export default function VariantForm() {
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className={[
-            'w-full rounded-md px-4 py-2.5 text-sm font-semibold text-white shadow-sm',
-            'transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900',
-            isLoading
-              ? 'cursor-not-allowed bg-indigo-400 dark:bg-indigo-800'
-              : 'bg-indigo-600 hover:bg-indigo-500',
-          ].join(' ')}
-        >
-          {isLoading ? 'Analyzing…' : 'Run Analysis'}
-        </button>
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={[
+              'flex h-12 w-full items-center justify-center gap-2.5 rounded-lg px-8 text-sm font-semibold text-white sm:w-auto',
+              'bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500',
+              'shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900',
+              isLoading
+                ? 'cursor-not-allowed opacity-60'
+                : 'hover:opacity-90 hover:shadow-[0_4px_14px_0_rgb(99,102,241,0.4)] active:scale-[0.98]',
+            ].join(' ')}
+          >
+            {isLoading && (
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            )}
+            {isLoading ? 'Analyzing…' : 'Run Analysis'}
+          </button>
+        </div>
       </form>
 
       {isLoading && <ResultsSkeleton />}

@@ -73,14 +73,14 @@ function AccordionItem({
   item: Item; index: number; isOpen: boolean; onToggle: () => void;
 }) {
   return (
-    <div className="border-b border-slate-100 last:border-0 dark:border-slate-800">
+    <div className="border-b border-slate-100 last:border-0 dark:border-zinc-800">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
         className={[
           'flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors',
-          'hover:bg-slate-50 dark:hover:bg-slate-800/60',
+          'hover:bg-slate-50 dark:hover:bg-zinc-800/60',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400',
         ].join(' ')}
       >
@@ -89,7 +89,7 @@ function AccordionItem({
           'mt-px flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
           isOpen
             ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300'
-            : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400',
+            : 'bg-slate-100 text-slate-500 dark:bg-zinc-700 dark:text-zinc-400',
         ].join(' ')}>
           {index + 1}
         </span>
@@ -98,7 +98,7 @@ function AccordionItem({
           'flex-1 text-sm font-medium leading-snug',
           isOpen
             ? 'text-indigo-700 dark:text-indigo-300'
-            : 'text-slate-700 dark:text-slate-300',
+            : 'text-slate-700 dark:text-zinc-300',
         ].join(' ')}>
           {item.question}
         </span>
@@ -106,7 +106,7 @@ function AccordionItem({
         {/* Chevron */}
         <svg
           className={[
-            'mt-0.5 h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 dark:text-slate-500',
+            'mt-0.5 h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 dark:text-zinc-500',
             isOpen ? 'rotate-180' : '',
           ].join(' ')}
           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
@@ -118,7 +118,7 @@ function AccordionItem({
       {isOpen && (
         <div className="space-y-3 pb-4 pl-12 pr-4">
           {item.paragraphs.map((text, i) => (
-            <p key={i} className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+            <p key={i} className="text-sm leading-relaxed text-slate-600 dark:text-zinc-400">
               {text}
             </p>
           ))}
@@ -148,16 +148,16 @@ export default function ExplainerAccordion({ isMultiVariant }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+    <div className="rounded-2xl border border-slate-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
       {/* Section header */}
-      <div className="flex items-center gap-2.5 border-b border-slate-100 px-4 py-3.5 dark:border-slate-800">
+      <div className="flex items-center gap-2.5 border-b border-slate-100 px-4 py-3.5 dark:border-zinc-800">
         <svg className="h-4 w-4 shrink-0 text-indigo-400 dark:text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
         </svg>
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
           Understanding the Results
         </h3>
-        <span className="ml-auto text-xs text-slate-400 dark:text-slate-600">
+        <span className="ml-auto text-xs text-slate-400 dark:text-zinc-600">
           {openSet.size === 0 ? 'click any question to expand' : `${openSet.size} open`}
         </span>
       </div>
