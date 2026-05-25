@@ -13,12 +13,12 @@ export default function ThemeToggle() {
       onClick={toggle}
       aria-label="Toggle color theme"
       className={[
-        'flex h-8 w-8 items-center justify-center rounded-lg transition-colors',
-        'text-slate-500 hover:bg-slate-100 hover:text-slate-700',
-        'dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2',
-        'dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-900',
-        'active:scale-[0.98]',
+        'flex items-center justify-center rounded p-1 transition-colors duration-150',
+        'text-slate-400 hover:text-slate-700',
+        'dark:text-zinc-500 dark:hover:text-zinc-300',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
+        'focus-visible:ring-offset-2 focus-visible:ring-offset-white',
+        'dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950',
       ].join(' ')}
     >
       <AnimatePresence mode="wait" initial={false}>

@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Plus } from 'lucide-react';
 
 import type { AnalyzePayload, AnalyzeResponse } from '@/app/lib/types';
 import AdvancedSettings, { type ThresholdPreset, PRESET_VALUES } from '@/app/ui/AdvancedSettings';
@@ -339,25 +340,28 @@ export default function VariantForm() {
                 );
               })}
               </AnimatePresence>
+            </div>
 
-              {/* Add Variant — dashed ghost card matching variant card height */}
-              {variants.length < MAX_VARIANTS && (
+            {variants.length < MAX_VARIANTS && (
+              <div className="flex justify-center py-6">
                 <button
                   type="button"
                   onClick={addVariant}
                   className={[
-                    'flex min-h-[172px] flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed',
-                    'border-slate-300 text-slate-400 transition-colors',
-                    'hover:border-indigo-400 hover:text-indigo-500 active:scale-[0.98]',
-                    'dark:border-zinc-700 dark:text-zinc-500 dark:hover:border-indigo-500 dark:hover:text-indigo-400',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400',
+                    'flex items-center gap-2 text-sm transition-colors duration-150',
+                    'text-slate-500 hover:text-slate-700',
+                    'dark:text-zinc-400 dark:hover:text-zinc-200',
+                    'focus-visible:outline-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400',
                   ].join(' ')}
                 >
-                  <span className="text-sm font-medium">+ Add variant</span>
-                  <span className="font-mono tabular-nums text-xs opacity-50">{variants.length} / {MAX_VARIANTS}</span>
+                  <Plus className="h-4 w-4" />
+                  <span className="font-medium">Add variant</span>
+                  <span className="ml-1 text-xs text-slate-400 dark:text-zinc-500">
+                    {variants.length} / {MAX_VARIANTS}
+                  </span>
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </>
         ) : (
           <CsvUpload onParsed={handleCsvParsed} />

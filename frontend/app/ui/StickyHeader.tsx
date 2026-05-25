@@ -54,21 +54,23 @@ export default function StickyHeader() {
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <a
               href="https://github.com/Tylerr175/Bayesian-ab-testing-dashboard"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="View source on GitHub"
               className={[
-                'flex h-8 w-8 items-center justify-center rounded-lg transition-colors',
-                'text-slate-500 hover:bg-slate-100 hover:text-slate-700',
-                'dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2',
-                'dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-900',
+                'flex items-center gap-1.5 rounded transition-colors duration-150',
+                'text-slate-400 hover:text-slate-700',
+                'dark:text-zinc-500 dark:hover:text-zinc-300',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
+                'focus-visible:ring-offset-2 focus-visible:ring-offset-white',
+                'dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950',
               ].join(' ')}
             >
               <GitHubIcon />
+              <span className="text-sm font-medium">GitHub</span>
             </a>
             <ThemeToggle />
           </div>
