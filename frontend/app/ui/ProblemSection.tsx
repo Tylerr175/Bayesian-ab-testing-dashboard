@@ -69,18 +69,18 @@ function ComparisonCard({
 
 export default function ProblemSection() {
   return (
-    <section id="explainer" className="px-6 py-24 sm:px-8 sm:py-32">
+    <section id="explainer" className="px-6 py-16 sm:px-8 sm:py-24">
       <div className="mx-auto max-w-3xl">
 
-        <ScrollReveal>
+        <ScrollReveal className="mb-16">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-indigo-500 dark:text-indigo-400">
-              The problem
+            <p className="font-mono text-sm text-slate-500 dark:text-zinc-500">
+              01 / The problem
             </p>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-zinc-50 sm:text-4xl">
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 dark:text-zinc-50 sm:text-5xl">
               Frequentist A/B testing answers the wrong question.
             </h2>
-            <p className="mt-4 text-lg text-slate-500 dark:text-zinc-400">
+            <p className="mt-5 text-lg text-slate-500 dark:text-zinc-400">
               You want to know{' '}
               <em className="not-italic text-slate-700 dark:text-zinc-300">which variant is better</em>.
               {' '}The null-hypothesis framework tells you whether your data is surprising under an
@@ -89,7 +89,7 @@ export default function ProblemSection() {
           </div>
         </ScrollReveal>
 
-        <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <ScrollReveal>
             <ComparisonCard label="The naive approach" accent="red"    items={problems} />
           </ScrollReveal>

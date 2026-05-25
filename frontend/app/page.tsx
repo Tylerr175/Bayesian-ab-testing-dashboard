@@ -4,6 +4,16 @@ import ProblemSection from '@/app/ui/ProblemSection';
 import HowItWorksSection from '@/app/ui/HowItWorksSection';
 import ToolSection from '@/app/ui/ToolSection';
 
+function SectionDivider() {
+  return (
+    <div className="px-6 sm:px-8">
+      <div className="mx-auto max-w-3xl">
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent dark:via-zinc-800" />
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
@@ -13,8 +23,11 @@ export default function Home() {
       {/* ── Scroll-narrative sections ── */}
       <main className="flex-1">
         <HeroSection />
+        <SectionDivider />
         <ProblemSection />
+        <SectionDivider />
         <HowItWorksSection />
+        <SectionDivider />
         <ToolSection />
       </main>
 

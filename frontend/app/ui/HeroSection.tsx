@@ -1,5 +1,6 @@
 'use client';
 
+import { ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ScrollReveal from '@/app/ui/ScrollReveal';
 
@@ -38,18 +39,20 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Scroll indicator — fades in after content, then bounces forever */}
+      {/* Scroll indicator — fades in after content, then bounces gently forever */}
       <ScrollReveal delay={300} className="absolute bottom-10 left-1/2 -translate-x-1/2">
-        <a href="#explainer" aria-label="Scroll to learn more">
+        <a
+          href="#explainer"
+          aria-label="Scroll to learn more"
+          className="cursor-pointer opacity-60 transition-opacity duration-200 hover:opacity-100"
+        >
           <motion.div
-            animate={{ y: [0, 6, 0] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-            className="flex flex-col items-center gap-1.5 text-slate-400 transition-colors hover:text-slate-600 dark:text-zinc-600 dark:hover:text-zinc-400"
+            animate={{ y: [0, 4, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            className="flex flex-col items-center gap-1 text-slate-400 dark:text-zinc-500"
           >
-            <span className="text-xs tracking-widest uppercase">scroll</span>
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
+            <span className="text-xs">Learn more</span>
+            <ChevronDown className="h-4 w-4" />
           </motion.div>
         </a>
       </ScrollReveal>

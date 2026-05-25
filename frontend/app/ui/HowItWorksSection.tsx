@@ -22,21 +22,21 @@ const steps = [
 
 export default function HowItWorksSection() {
   return (
-    <section className="border-t border-slate-100 px-6 py-24 dark:border-zinc-800/60 sm:px-8 sm:py-32">
+    <section className="px-6 py-16 sm:px-8 sm:py-24">
       <div className="mx-auto max-w-3xl">
 
-        <ScrollReveal>
+        <ScrollReveal className="mb-16">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-indigo-500 dark:text-indigo-400">
-              How it works
+            <p className="font-mono text-sm text-slate-500 dark:text-zinc-500">
+              02 / How it works
             </p>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-zinc-50 sm:text-4xl">
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 dark:text-zinc-50 sm:text-5xl">
               Three steps from data to decision.
             </h2>
           </div>
         </ScrollReveal>
 
-        <div className="mt-14" role="list">
+        <div role="list">
           {steps.map(({ num, title, body }, i) => (
             <ScrollReveal key={num} delay={i * 150}>
               <div

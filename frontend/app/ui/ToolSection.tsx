@@ -5,18 +5,18 @@ import VariantForm from '@/app/ui/VariantForm';
 
 export default function ToolSection() {
   return (
-    <section id="try-it" className="border-t border-slate-100 px-6 py-24 dark:border-zinc-800/60 sm:px-8 sm:py-32">
+    <section id="try-it" className="px-6 py-16 sm:px-8 sm:py-24">
       <div className="mx-auto max-w-3xl">
 
-        <ScrollReveal className="mb-10">
+        <ScrollReveal className="mb-16">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-indigo-500 dark:text-indigo-400">
-              Try it now
+            <p className="font-mono text-sm text-slate-500 dark:text-zinc-500">
+              03 / Try it now
             </p>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-zinc-50 sm:text-4xl">
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 dark:text-zinc-50 sm:text-5xl">
               Run your first Bayesian test.
             </h2>
-            <p className="mt-4 text-lg text-slate-500 dark:text-zinc-400">
+            <p className="mt-5 text-lg text-slate-500 dark:text-zinc-400">
               Enter visitor and conversion counts for each variant. Results appear instantly — no account required.
             </p>
           </div>
