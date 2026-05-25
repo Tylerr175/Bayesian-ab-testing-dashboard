@@ -17,6 +17,10 @@
   --font-mono: var(--font-jetbrains-mono);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-size: 15px;
   line-height: 1.625;

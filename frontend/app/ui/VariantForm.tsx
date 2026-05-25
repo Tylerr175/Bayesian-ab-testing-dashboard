@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import type { AnalyzePayload, AnalyzeResponse } from '@/app/lib/types';
@@ -139,8 +139,9 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function VariantForm() {
-  const baseId     = useId();
-  const counterRef = useRef(2); // 0 and 1 reserved for the two default variants
+  const baseId      = useId();
+  const counterRef  = useRef(2); // 0 and 1 reserved for the two default variants
+  const resultsRef  = useRef<HTMLDivElement>(null);
   function uid() { return `${baseId}-${counterRef.current++}`; }
 
   const [activeTab,    setActiveTab]    = useState<ActiveTab>('manual');
@@ -155,6 +156,14 @@ export default function VariantForm() {
   const [result,       setResult]       = useState<AnalyzeResponse | null>(null);
   const [thresholdPreset,  setThresholdPreset]  = useState<ThresholdPreset>('balanced');
   const [customThreshold, setCustomThreshold] = useState('');
+
+  // ── Scroll to results once they arrive ────────────────────────────────────
+
+  useEffect(() => {
+    if (result && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [result]);
 
   // ── Variant list mutations ─────────────────────────────────────────────────
 
@@ -391,8 +400,10 @@ export default function VariantForm() {
         </div>
       </form>
 
-      {isLoading && <ResultsSkeleton />}
-      {result && !isLoading && <ResultsPanel result={result} />}
+      <div ref={resultsRef}>
+        {isLoading && <ResultsSkeleton />}
+        {result && !isLoading && <ResultsPanel result={result} />}
+      </div>
     </>
   );
 }
