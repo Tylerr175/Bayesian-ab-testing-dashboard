@@ -1,40 +1,39 @@
-function Bar({ w, h = 'h-3' }: { w: string; h?: string }) {
-  return <div className={`${h} ${w} rounded bg-slate-200 dark:bg-zinc-700`} />;
+function Shim({ className }: { className: string }) {
+  return <div className={`animate-shimmer rounded ${className}`} />;
 }
 
 export default function ResultsSkeleton() {
   return (
-    <div className="mt-8 animate-pulse space-y-6">
+    <div className="mt-10 space-y-8">
       <hr className="border-slate-200 dark:border-zinc-800" />
 
-      {/* Hero */}
-      <div className="py-2 text-center">
-        <div className="mx-auto h-16 w-32 rounded-xl bg-slate-200 dark:bg-zinc-700" />
-        <div className="mx-auto mt-4 h-3.5 w-64 rounded bg-slate-200 dark:bg-zinc-700" />
-        <div className="mx-auto mt-3 h-8 w-44 rounded-full bg-slate-200 dark:bg-zinc-700" />
+      {/* Hero — mirrors the text-7xl number + subtitle + banner */}
+      <div className="py-4 text-center">
+        <Shim className="mx-auto h-20 w-40 rounded-xl" />
+        <Shim className="mx-auto mt-4 h-3.5 w-64" />
+        <div className="mx-auto mt-4 max-w-lg">
+          <Shim className="h-16 w-full rounded-xl" />
+        </div>
       </div>
 
-      {/* Chart */}
-      <div className="rounded-xl border border-slate-200 bg-white px-6 pb-6 pt-5 dark:border-zinc-700 dark:bg-zinc-900">
-        <Bar w="w-52" h="h-3.5" />
-        <Bar w="w-72 mt-2" h="h-2.5" />
-        <div className="mt-5 h-56 rounded-lg bg-slate-100 dark:bg-zinc-800 sm:h-64" />
-      </div>
-
-      {/* Recommendation banner */}
-      <div className="h-16 rounded-lg bg-slate-100 dark:bg-zinc-800" />
-
-      {/* Table */}
-      <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-zinc-700">
-        <div className="h-10 border-b border-slate-200 bg-slate-50 dark:border-zinc-700 dark:bg-zinc-800" />
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="flex items-center gap-4 border-t border-slate-100 bg-white px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="space-y-2">
-              <Bar w="w-28" />
-              <Bar w="w-48" h="h-2" />
+      {/* Metrics grid — mirrors the 3-column rounded-2xl card */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-zinc-800">
+        <div className="grid grid-cols-1 divide-y divide-slate-200 dark:divide-zinc-800 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="space-y-3 px-5 py-5 sm:px-6">
+              <Shim className="h-2.5 w-28" />
+              <Shim className="h-3.5 w-full" />
+              <Shim className="h-3.5 w-4/5" />
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+      </div>
+
+      {/* Chart card */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 dark:border-zinc-700 dark:bg-zinc-900">
+        <Shim className="h-2.5 w-40" />
+        <Shim className="mt-2 h-2.5 w-64" />
+        <Shim className="mt-6 h-56 w-full rounded-xl" />
       </div>
     </div>
   );
