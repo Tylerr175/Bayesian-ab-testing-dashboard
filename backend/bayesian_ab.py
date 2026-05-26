@@ -140,7 +140,7 @@ def estimate_sample_size(
     seed=None,
 ):
     treatment_rate = baseline_rate + minimum_lift
-    N_MIN, N_MAX, N_SIMS, N_MC = 100, 200_000, 1_000, 2_000
+    N_MIN, N_MAX, N_SIMS, N_MC = 100, 200_000, 2_000, 500
 
     _cache: dict[int, float] = {}
 
@@ -176,6 +176,7 @@ def estimate_sample_size(
             "total_sample_size":       N_MAX * 2,
             "power_achieved":          round(cap_power, 4),
             "feasible":                False,
+            "power_curve":             [],
         }
 
     lo, hi = N_MIN, N_MAX
@@ -186,11 +187,22 @@ def estimate_sample_size(
         else:
             lo = mid + 1
 
+    # Extend the cache to just past the recommended N so the chart curves beyond it.
+    for extra_n in [min(N_MAX, round(lo * 1.25)), min(N_MAX, round(lo * 1.5))]:
+        power_at(extra_n)
+
+    x_max = min(N_MAX, round(lo * 1.5))
+    curve = sorted(
+        [{"sample_size": n, "power": round(p, 4)} for n, p in _cache.items() if n <= x_max],
+        key=lambda d: d["sample_size"],
+    )
+
     return {
         "sample_size_per_variant": lo,
         "total_sample_size":       lo * 2,
         "power_achieved":          round(power_at(lo), 4),
         "feasible":                True,
+        "power_curve":             curve,
     }
 
 

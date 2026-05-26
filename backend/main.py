@@ -168,11 +168,17 @@ class EstimateRequest(BaseModel):
         return self
 
 
+class PowerCurvePoint(BaseModel):
+    sample_size: int
+    power:       float
+
+
 class EstimateResponse(BaseModel):
     sample_size_per_variant: int
     total_sample_size:       int
     power_achieved:          float
     feasible:                bool
+    power_curve:             list[PowerCurvePoint]
 
 
 # ── Endpoints ──────────────────────────────────────────────────────────────────
@@ -272,7 +278,7 @@ def estimate(request: Request, req: EstimateRequest) -> EstimateResponse:
             minimum_lift=req.minimum_lift,
             confidence_threshold=req.confidence_threshold,
             power=req.power,
-            seed=req.seed,
+            seed=req.seed if req.seed is not None else 42,
         )
     except Exception:
         logger.exception("Unexpected error in /api/estimate-sample-size")
