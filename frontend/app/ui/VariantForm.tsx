@@ -348,10 +348,10 @@ export default function VariantForm() {
                   type="button"
                   onClick={addVariant}
                   className={[
-                    'flex items-center gap-2 text-sm transition-colors duration-150',
-                    'text-slate-500 hover:text-slate-700',
-                    'dark:text-zinc-400 dark:hover:text-zinc-200',
-                    'focus-visible:outline-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400',
+                    'flex items-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors duration-150',
+                    'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700',
+                    'dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-200',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400',
                   ].join(' ')}
                 >
                   <Plus className="h-4 w-4" />

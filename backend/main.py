@@ -3,9 +3,15 @@ import os
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+import numpy as np
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, model_validator
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 
 from bayesian_ab import analyze_ab_test
 
@@ -18,7 +24,20 @@ logger = logging.getLogger(__name__)
 
 _started_at = datetime.now(timezone.utc)
 
+# ── Rate limiter ───────────────────────────────────────────────────────────────
+# Keyed by client IP; only /api/analyze carries the 30/minute decorator.
+# Health endpoints are intentionally exempt.
+
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(title="BayesLab")
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
+# ── CORS ───────────────────────────────────────────────────────────────────────
+# Origins are controlled via the ALLOWED_ORIGINS environment variable.
+# Methods and headers are narrowed to what the API actually uses; wildcard
+# allow_origins is never set — an empty env var falls back to localhost only.
 
 _raw_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000")
 _allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
@@ -26,33 +45,50 @@ _allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 
-# ── Request ────────────────────────────────────────────────────────────────────
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Rate limit exceeded. Maximum 30 requests per minute per IP."},
+    )
+
+
+# ── Request models ─────────────────────────────────────────────────────────────
 
 class VariantInput(BaseModel):
-    name: str = Field(..., min_length=1)
-    visitors: int = Field(..., ge=0)
-    conversions: int = Field(..., ge=0)
+    name: str = Field(..., min_length=1, max_length=100)
+    visitors: int = Field(..., ge=0, le=10_000_000)
+    conversions: int = Field(..., ge=0, le=10_000_000)
+
+    @model_validator(mode="after")
+    def conversions_le_visitors(self) -> "VariantInput":
+        if self.conversions > self.visitors:
+            raise ValueError(
+                f"Variant '{self.name}': conversions ({self.conversions}) "
+                f"cannot exceed visitors ({self.visitors})."
+            )
+        return self
 
 
 class AnalyzeRequest(BaseModel):
-    # New multi-variant format
-    variants: Optional[list[VariantInput]] = None
+    # Multi-variant format (2–6 variants enforced in validator below)
+    variants: Optional[list[VariantInput]] = Field(default=None, max_length=6)
 
     # Legacy two-variant fields (still accepted for backward compatibility)
-    a_visitors:   Optional[int] = Field(default=None, ge=0)
-    a_conversions: Optional[int] = Field(default=None, ge=0)
-    b_visitors:   Optional[int] = Field(default=None, ge=0)
-    b_conversions: Optional[int] = Field(default=None, ge=0)
+    a_visitors:    Optional[int] = Field(default=None, ge=0, le=10_000_000)
+    a_conversions: Optional[int] = Field(default=None, ge=0, le=10_000_000)
+    b_visitors:    Optional[int] = Field(default=None, ge=0, le=10_000_000)
+    b_conversions: Optional[int] = Field(default=None, ge=0, le=10_000_000)
 
-    prior_alpha:     float = Field(default=1.0, gt=0)
-    prior_beta:      float = Field(default=1.0, gt=0)
-    n_samples:       int   = Field(default=10_000, gt=0)
-    stop_threshold:  float = Field(default=0.005, gt=0)
+    prior_alpha:    float = Field(default=1.0, gt=0)
+    prior_beta:     float = Field(default=1.0, gt=0)
+    n_samples:      int   = Field(default=10_000, gt=0, le=200_000)
+    stop_threshold: float = Field(default=0.005, gt=0)
 
     @model_validator(mode="after")
     def resolve_variants(self) -> "AnalyzeRequest":
@@ -77,16 +113,12 @@ class AnalyzeRequest(BaseModel):
             ]
         if len(self.variants) < 2:
             raise ValueError("At least 2 variants are required.")
-        for v in self.variants:
-            if v.conversions > v.visitors:
-                raise ValueError(
-                    f"Variant '{v.name}': conversions ({v.conversions}) "
-                    f"cannot exceed visitors ({v.visitors})."
-                )
+        if len(self.variants) > 6:
+            raise ValueError("Maximum 6 variants allowed.")
         return self
 
 
-# ── Response ───────────────────────────────────────────────────────────────────
+# ── Response models ────────────────────────────────────────────────────────────
 
 class BetaParams(BaseModel):
     alpha: float
@@ -133,7 +165,8 @@ def api_health():
 
 
 @app.post("/api/analyze", response_model=AnalyzeResponse)
-def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
+@limiter.limit("30/minute")
+def analyze(request: Request, req: AnalyzeRequest) -> AnalyzeResponse:
     try:
         results = analyze_ab_test(
             [v.model_dump() for v in req.variants],
@@ -141,8 +174,33 @@ def analyze(req: AnalyzeRequest) -> AnalyzeResponse:
             prior_beta=req.prior_beta,
             n_samples=req.n_samples,
         )
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {exc}") from exc
+    except ValueError:
+        logger.warning(
+            "ValueError during analysis (%d variants, n_samples=%d)",
+            len(req.variants), req.n_samples,
+        )
+        raise HTTPException(
+            status_code=422,
+            detail="Analysis failed: please verify your input data is numerically valid.",
+        )
+    except (ArithmeticError, np.linalg.LinAlgError):
+        logger.warning(
+            "Numerical error during analysis (%d variants, n_samples=%d)",
+            len(req.variants), req.n_samples,
+        )
+        raise HTTPException(
+            status_code=422,
+            detail="Analysis failed due to numerical issues with the input data.",
+        )
+    except MemoryError:
+        logger.error(
+            "MemoryError during analysis (n_samples=%d, n_variants=%d)",
+            req.n_samples, len(req.variants),
+        )
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
+    except Exception:
+        logger.exception("Unexpected error in /api/analyze")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
 
     winner_loss = results["winner_expected_loss"]
     winner_name = results["winner"]

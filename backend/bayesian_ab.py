@@ -8,6 +8,7 @@ def analyze_ab_test(
     prior_alpha=1,
     prior_beta=1,
     n_samples=10_000,
+    seed=None,
 ):
     """
     Bayesian A/B(/C/D/…) test using a Beta-Binomial conjugate model.
@@ -32,7 +33,7 @@ def analyze_ab_test(
     """
 
     n   = len(variants)
-    rng = np.random.default_rng(seed=42)   # fixed seed → reproducible results
+    rng = np.random.default_rng(seed=seed)
 
     # ── STEP 1: Compute posterior parameters ───────────────────────────────────
     #
