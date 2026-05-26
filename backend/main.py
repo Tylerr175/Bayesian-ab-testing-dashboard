@@ -13,7 +13,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 
-from bayesian_ab import analyze_ab_test
+from bayesian_ab import analyze_ab_test, estimate_sample_size
 
 logging.basicConfig(
     level=logging.INFO,
@@ -151,6 +151,30 @@ class AnalyzeResponse(BaseModel):
     recommendation: Recommendation
 
 
+class EstimateRequest(BaseModel):
+    baseline_rate:        float         = Field(...,          gt=0, lt=1)
+    minimum_lift:         float         = Field(...,          gt=0, lt=1)
+    confidence_threshold: float         = Field(default=0.95, gt=0, lt=1)
+    power:                float         = Field(default=0.80, gt=0, lt=1)
+    seed:                 Optional[int] = Field(default=None)
+
+    @model_validator(mode="after")
+    def lift_within_range(self) -> "EstimateRequest":
+        if self.baseline_rate + self.minimum_lift > 1.0:
+            raise ValueError(
+                f"baseline_rate + minimum_lift must be ≤ 1.0 "
+                f"(got {self.baseline_rate} + {self.minimum_lift})."
+            )
+        return self
+
+
+class EstimateResponse(BaseModel):
+    sample_size_per_variant: int
+    total_sample_size:       int
+    power_achieved:          float
+    feasible:                bool
+
+
 # ── Endpoints ──────────────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -237,3 +261,27 @@ def analyze(request: Request, req: AnalyzeRequest) -> AnalyzeResponse:
             threshold=req.stop_threshold,
         ),
     )
+
+
+@app.post("/api/estimate-sample-size", response_model=EstimateResponse)
+@limiter.limit("30/minute")
+def estimate(request: Request, req: EstimateRequest) -> EstimateResponse:
+    try:
+        result = estimate_sample_size(
+            baseline_rate=req.baseline_rate,
+            minimum_lift=req.minimum_lift,
+            confidence_threshold=req.confidence_threshold,
+            power=req.power,
+            seed=req.seed,
+        )
+    except Exception:
+        logger.exception("Unexpected error in /api/estimate-sample-size")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
+
+    logger.info(
+        "estimate | baseline=%.3f  lift=%.3f  n=%d  power=%.3f  feasible=%s",
+        req.baseline_rate, req.minimum_lift,
+        result["sample_size_per_variant"], result["power_achieved"],
+        result["feasible"],
+    )
+    return EstimateResponse(**result)

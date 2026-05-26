@@ -1,6 +1,5 @@
 import numpy as np
 from scipy import stats
-import matplotlib.pyplot as plt
 
 
 def analyze_ab_test(
@@ -133,6 +132,68 @@ def analyze_ab_test(
     }
 
 
+def estimate_sample_size(
+    baseline_rate,
+    minimum_lift,
+    confidence_threshold=0.95,
+    power=0.80,
+    seed=None,
+):
+    treatment_rate = baseline_rate + minimum_lift
+    N_MIN, N_MAX, N_SIMS, N_MC = 100, 200_000, 1_000, 2_000
+
+    _cache: dict[int, float] = {}
+
+    def power_at(n: int) -> float:
+        if n in _cache:
+            return _cache[n]
+        # Per-N deterministic seeding keeps binary search stable across repeated evals.
+        sub_seed = None if seed is None else (seed * 1_000_003 + n) % (2 ** 31)
+        rng = np.random.default_rng(sub_seed)
+        ctrl_conv = rng.binomial(n, baseline_rate, size=N_SIMS)
+        trt_conv  = rng.binomial(n, treatment_rate, size=N_SIMS)
+        successes = 0
+        for i in range(N_SIMS):
+            result = analyze_ab_test(
+                [
+                    {"name": "control",   "visitors": n, "conversions": int(ctrl_conv[i])},
+                    {"name": "treatment", "visitors": n, "conversions": int(trt_conv[i])},
+                ],
+                n_samples=N_MC,
+            )
+            trt_prob = next(
+                v["prob_best"] for v in result["variants"] if v["name"] == "treatment"
+            )
+            if trt_prob >= confidence_threshold:
+                successes += 1
+        _cache[n] = successes / N_SIMS
+        return _cache[n]
+
+    cap_power = power_at(N_MAX)
+    if cap_power < power:
+        return {
+            "sample_size_per_variant": N_MAX,
+            "total_sample_size":       N_MAX * 2,
+            "power_achieved":          round(cap_power, 4),
+            "feasible":                False,
+        }
+
+    lo, hi = N_MIN, N_MAX
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if power_at(mid) >= power:
+            hi = mid
+        else:
+            lo = mid + 1
+
+    return {
+        "sample_size_per_variant": lo,
+        "total_sample_size":       lo * 2,
+        "power_achieved":          round(power_at(lo), 4),
+        "feasible":                True,
+    }
+
+
 def print_report(results, threshold=0.005):
     """Print a human-readable summary of analyze_ab_test() results."""
     variants    = results["variants"]
@@ -178,84 +239,3 @@ def print_report(results, threshold=0.005):
 
     print(f"\n{sep}\n")
 
-
-def plot_posteriors(results):
-    """
-    Plot posterior Beta distributions for all variants on one chart.
-    Saves to posteriors.png and returns the path.
-
-    Works for any number of variants, though the palette cycles after 6.
-    """
-    variants = results["variants"]
-
-    PALETTE = ["#2B6CB0", "#C05621", "#276749", "#702459", "#744210", "#1A365D"]
-    COLOR_GRID   = "#EBEBEB"
-    COLOR_SPINE  = "#CCCCCC"
-    COLOR_TEXT   = "#2D2D2D"
-    COLOR_SUBTEXT = "#777777"
-
-    # x-axis range: tight around the 0.1%–99.9% quantiles of all distributions
-    lo_vals, hi_vals = [], []
-    for v in variants:
-        a, b = v["posterior_params"]["alpha"], v["posterior_params"]["beta"]
-        lo_vals.append(stats.beta.ppf(0.001, a, b))
-        hi_vals.append(stats.beta.ppf(0.999, a, b))
-
-    x_lo = max(0.0, min(lo_vals))
-    x_hi = min(1.0, max(hi_vals))
-    pad  = (x_hi - x_lo) * 0.08
-    x    = np.linspace(max(0.0, x_lo - pad), min(1.0, x_hi + pad), 2000)
-
-    fig, ax = plt.subplots(figsize=(11, 5.5))
-    fig.patch.set_facecolor("white")
-    ax.set_facecolor("white")
-
-    for spine in ("top", "right"):
-        ax.spines[spine].set_visible(False)
-    for spine in ("left", "bottom"):
-        ax.spines[spine].set_color(COLOR_SPINE)
-        ax.spines[spine].set_linewidth(0.8)
-
-    ax.tick_params(colors=COLOR_SUBTEXT, labelsize=10)
-    ax.yaxis.grid(True, color=COLOR_GRID, linewidth=0.9, zorder=0)
-    ax.set_axisbelow(True)
-
-    for i, v in enumerate(variants):
-        color = PALETTE[i % len(PALETTE)]
-        a, b  = v["posterior_params"]["alpha"], v["posterior_params"]["beta"]
-        pdf   = stats.beta.pdf(x, a, b)
-        mean  = v["posterior_mean"]
-        lo, hi = v["credible_interval"]
-
-        ax.plot(x, pdf, color=color, linewidth=2.5, zorder=3,
-                label=f"Variant {v['name']} — mean {mean * 100:.2f}%")
-        ax.fill_between(x, 0, pdf,
-                        where=(x >= lo) & (x <= hi),
-                        color=color, alpha=0.15, zorder=2)
-        ax.axvline(mean, color=color, linewidth=1.5, linestyle="--", alpha=0.85, zorder=3)
-
-    ax.set_xlabel("Conversion Rate", fontsize=12, color=COLOR_TEXT, labelpad=8)
-    ax.set_ylabel("Posterior Density", fontsize=12, color=COLOR_TEXT, labelpad=8)
-    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v * 100:.1f}%"))
-    ax.set_ylim(bottom=0)
-
-    fig.suptitle("Posterior Conversion Rate Distributions",
-                 fontsize=15, fontweight="bold", color=COLOR_TEXT, y=1.01)
-
-    legend = ax.legend(fontsize=10, frameon=True, framealpha=0.95,
-                       edgecolor=COLOR_SPINE, loc="upper center",
-                       bbox_to_anchor=(0.5, -0.13), ncol=2, handlelength=1.6)
-    legend.get_frame().set_linewidth(0.8)
-
-    output_path = "posteriors.png"
-    fig.savefig(output_path, dpi=150, bbox_inches="tight", facecolor="white")
-    plt.close(fig)
-    return output_path
-
-
-def main():
-    pass
-
-
-if __name__ == "__main__":
-    main()
