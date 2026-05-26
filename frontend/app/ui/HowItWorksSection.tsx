@@ -28,7 +28,7 @@ export default function HowItWorksSection() {
         <ScrollReveal className="mb-16">
           <div>
             <p className="font-mono text-sm text-slate-500 dark:text-zinc-500">
-              02 / How it works
+              04 / How it works
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 dark:text-zinc-50 sm:text-5xl">
               Three steps from data to decision.

@@ -2,16 +2,18 @@
 
 import ScrollReveal from '@/app/ui/ScrollReveal';
 
-const problems = [
-  { stat: '< 0.05', label: 'p-value threshold', note: 'Arbitrary cutoff invented in the 1920s' },
-  { stat: '∞',      label: 'sample size needed', note: 'Running tests longer doesn\'t always help' },
-  { stat: '?',      label: 'practical significance', note: 'A significant result can still be useless' },
+const naive = [
+  { stat: '÷',  label: 'Looks like a clear winner',       note: 'Observed rates — not ground truth' },
+  { stat: '?',  label: 'No uncertainty shown',              note: 'How confident should you actually be?' },
+  { stat: '∞',  label: 'No stopping rule',                  note: 'When do you have enough data to act?' },
+  { stat: '!',  label: 'Easily fooled by small samples',    note: 'Tiny differences feel meaningful' },
 ];
 
-const solutions = [
-  { stat: '94%',  label: 'probability B wins', note: 'A direct answer to your actual question' },
-  { stat: '0.3%', label: 'expected loss',       note: 'Know the cost of being wrong before you ship' },
-  { stat: '2–6',  label: 'variants at once',    note: 'Compare multiple ideas in a single test' },
+const bayesian = [
+  { stat: '94%',  label: 'probability B wins',      note: 'A real answer with confidence behind it' },
+  { stat: '3.1%', label: 'expected gain',            note: 'Quantifies how much better B actually is' },
+  { stat: '→',    label: 'Stop when safe to ship',   note: "Tells you when more data won't change the answer" },
+  { stat: '±',    label: 'Honest about uncertainty', note: "Won't declare a winner that isn't one" },
 ];
 
 function ComparisonCard({
@@ -43,12 +45,12 @@ function ComparisonCard({
         {label}
       </p>
 
-      <ul className="space-y-5">
+      <ul className={isRed ? 'space-y-6' : 'space-y-5'}>
         {items.map(({ stat, label: itemLabel, note }) => (
-          <li key={itemLabel} className="flex items-start gap-4">
+          <li key={itemLabel} className={`flex items-start ${isRed ? 'gap-3' : 'gap-4'}`}>
             <span
               className={[
-                'w-14 shrink-0 font-mono text-xl font-bold tabular-nums',
+                `${isRed ? 'w-10' : 'w-14'} shrink-0 font-mono text-xl font-bold tabular-nums`,
                 isRed
                   ? 'text-rose-400 dark:text-rose-500'
                   : 'text-indigo-500 dark:text-indigo-400',
@@ -67,34 +69,35 @@ function ComparisonCard({
   );
 }
 
-export default function ProblemSection() {
+export default function WhyNotDivideSection() {
   return (
-    <section id="explainer" className="px-6 py-16 sm:px-8 sm:py-24">
+    <section className="px-6 py-16 sm:px-8 sm:py-24">
       <div className="mx-auto max-w-3xl">
 
         <ScrollReveal className="mb-16">
           <div>
             <p className="font-mono text-sm text-slate-500 dark:text-zinc-500">
-              03 / The problem
+              02 / Why not just divide it yourself?
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 dark:text-zinc-50 sm:text-5xl">
-              Why not use p-values?
+              The math feels obvious — until it isn&apos;t.
             </h2>
             <p className="mt-5 text-lg text-slate-500 dark:text-zinc-400">
-              You want to know{' '}
-              <em className="not-italic text-slate-700 dark:text-zinc-300">which variant is better</em>.
-              {' '}The null-hypothesis framework tells you whether your data is surprising under an
-              assumption of no difference — which is not what you asked.
+              If Version A converted 100 out of 1,000 and Version B converted 130 out of 1,000, B looks like the
+              clear winner. 13% beats 10%. Ship it. But here&apos;s the question nobody asks: how
+              sure are you? The numbers you observed are samples, not truth. The real conversion
+              rates could be anywhere — and with small samples, &ldquo;anywhere&rdquo; is a much
+              bigger range than people realize.
             </p>
           </div>
         </ScrollReveal>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <ScrollReveal>
-            <ComparisonCard label="The naive approach" accent="red"    items={problems} />
+            <ComparisonCard label="Just dividing the numbers" accent="red"    items={naive} />
           </ScrollReveal>
           <ScrollReveal delay={200}>
-            <ComparisonCard label="What BayesLab does" accent="indigo" items={solutions} />
+            <ComparisonCard label="What BayesLab does"        accent="indigo" items={bayesian} />
           </ScrollReveal>
         </div>
 

@@ -11,19 +11,19 @@ A web tool for analyzing A/B tests using Bayesian inference instead of p-values.
 
 | Light | Dark |
 |-------|------|
-| ![BayesLab light mode](docs/screenshots/dashboard-light.png) | ![BayesLab dark mode](docs/screenshots/dashboard-dark.png) |
+| ![BayesLab light mode](screenshots/dashboard-light.png) | ![BayesLab dark mode](screenshots/dashboard-dark.png) |
 
 **Analysis form**
 
 | Light | Dark |
 |-------|------|
-| ![Analysis form light](docs/screenshots/analysis-form-light.png) | ![Analysis form dark](docs/screenshots/analysis-form-dark.png) |
+| ![Analysis form light](screenshots/analysis-form-light.png) | ![Analysis form dark](screenshots/analysis-form-dark.png) |
 
 **Results**
 
 | Light | Dark |
 |-------|------|
-| ![Results light](docs/screenshots/results-light.png) | ![Results dark](docs/screenshots/results-dark.png) |
+| ![Results light](screenshots/results-light.png) | ![Results dark](screenshots/results-dark.png) |
 
 ## Why I built this
 

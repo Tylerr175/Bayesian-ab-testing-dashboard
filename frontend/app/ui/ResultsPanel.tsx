@@ -1,8 +1,8 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, Clock } from 'lucide-react';
+import { CheckCircle2, Clock, HelpCircle } from 'lucide-react';
 import type { AnalyzeResponse, VariantResult } from '@/app/lib/types';
 import { useCountUp } from '@/app/hooks/useCountUp';
 import ExplainerAccordion from '@/app/ui/ExplainerAccordion';
@@ -107,6 +107,31 @@ function MetricRow({ variant, idx, value, isWinner }: {
   );
 }
 
+// ── Lift tooltip ───────────────────────────────────────────────────────────────
+
+function LiftHelpIcon() {
+  const [visible, setVisible] = useState(false);
+  return (
+    <span className="relative inline-flex items-center">
+      <button
+        type="button"
+        aria-label="What is lift?"
+        onMouseEnter={() => setVisible(true)}
+        onMouseLeave={() => setVisible(false)}
+        onClick={() => setVisible(v => !v)}
+        className="text-slate-400 transition-colors duration-150 hover:text-slate-600 dark:text-zinc-500 dark:hover:text-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+      >
+        <HelpCircle className="h-4 w-4" />
+      </button>
+      {visible && (
+        <div className="absolute left-full top-0 z-10 ml-2 w-[280px] rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left text-sm text-slate-700 shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
+          Lift is the percentage-point difference in conversion rate between the two variants, always shown from the winner's perspective. The 95% credible interval tells you the plausible range for that difference — if it excludes zero, the result is meaningful.
+        </div>
+      )}
+    </span>
+  );
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 interface Props { result: AnalyzeResponse }
@@ -120,8 +145,22 @@ export default function ResultsPanel({ result }: Props) {
 
   const heroColor = isStop ? 'text-emerald-500' : 'text-amber-500';
 
-  const twoVariant = variants.length === 2;
-  const liftMean = twoVariant ? variants[1].posterior_mean - variants[0].posterior_mean : null;
+  // Sort by prob_best to find winner and runner-up for lift (works for 2–6 variants)
+  const byProb = [...variants].sort((a, b) => b.prob_best - a.prob_best);
+  const liftWinner   = byProb[0];
+  const liftRunnerUp = byProb[1];
+
+  // Lift is always computed in the direction of the winner so it reads as positive.
+  // CI via normal approximation of independent Beta posteriors.
+  const liftMean = liftWinner.posterior_mean - liftRunnerUp.posterior_mean;
+  const betaVar = (a: number, b: number) => { const n = a + b; return (a * b) / (n * n * (n + 1)); };
+  const liftStdErr = Math.sqrt(
+    betaVar(liftWinner.posterior_params.alpha, liftWinner.posterior_params.beta) +
+    betaVar(liftRunnerUp.posterior_params.alpha, liftRunnerUp.posterior_params.beta)
+  );
+  const liftCILower  = liftMean - 1.96 * liftStdErr;
+  const liftCIUpper  = liftMean + 1.96 * liftStdErr;
+  const liftEquivalent = liftCILower <= 0;
 
   // Count-up animation on the hero probability
   const animatedProb = useCountUp(winnerVariant.prob_best, 600);
@@ -145,19 +184,25 @@ export default function ResultsPanel({ result }: Props) {
           probability that Variant {winnerVariant.name} is the best
         </p>
 
-        {twoVariant && liftMean !== null && (
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <span className={[
-              'rounded-full px-3 py-1 font-mono text-sm font-medium tabular-nums',
-              liftMean > 0
-                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
-                : liftMean < 0
-                  ? 'bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-400'
-                  : 'bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400',
-            ].join(' ')}>
-              {liftMean >= 0 ? '+' : ''}{pct(liftMean)} lift
-            </span>
-            <span className="text-xs text-slate-400 dark:text-zinc-500">B − A posterior means</span>
+        {variants.length === 2 && (
+          <div className="mt-4 flex flex-col items-center gap-1.5">
+            {liftEquivalent ? (
+              <span className="text-sm text-slate-500 dark:text-zinc-400">
+                Variants performed equivalently
+              </span>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 font-mono text-sm font-medium tabular-nums text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">
+                    +{pct(liftMean)} lift
+                  </span>
+                  <LiftHelpIcon />
+                </div>
+                <p className="text-xs text-slate-400 dark:text-zinc-500">
+                  95% CI: {pct(liftCILower)} to {pct(liftCIUpper)}
+                </p>
+              </>
+            )}
           </div>
         )}
 

@@ -11,7 +11,7 @@ export default function ToolSection() {
         <ScrollReveal className="mb-16">
           <div>
             <p className="font-mono text-sm text-slate-500 dark:text-zinc-500">
-              03 / Try it now
+              05 / Try it now
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 dark:text-zinc-50 sm:text-5xl">
               Run your first Bayesian test.

@@ -1,5 +1,7 @@
 import StickyHeader from '@/app/ui/StickyHeader';
 import HeroSection from '@/app/ui/HeroSection';
+import WhatItsForSection from '@/app/ui/WhatItsForSection';
+import WhyNotDivideSection from '@/app/ui/WhyNotDivideSection';
 import ProblemSection from '@/app/ui/ProblemSection';
 import HowItWorksSection from '@/app/ui/HowItWorksSection';
 import ToolSection from '@/app/ui/ToolSection';
@@ -23,6 +25,10 @@ export default function Home() {
       {/* ── Scroll-narrative sections ── */}
       <main className="flex-1">
         <HeroSection />
+        <SectionDivider />
+        <WhatItsForSection />
+        <SectionDivider />
+        <WhyNotDivideSection />
         <SectionDivider />
         <ProblemSection />
         <SectionDivider />
