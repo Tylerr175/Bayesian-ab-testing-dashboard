@@ -7,6 +7,7 @@ import type { AnalyzeResponse, VariantResult } from '@/app/lib/types';
 import { useCountUp } from '@/app/hooks/useCountUp';
 import ExplainerAccordion from '@/app/ui/ExplainerAccordion';
 import PosteriorChart from '@/app/ui/PosteriorChart';
+import PriorSensitivityPanel from '@/app/ui/PriorSensitivityPanel';
 
 function pct(v: number, decimals = 2): string {
   return (v * 100).toFixed(decimals) + '%';
@@ -237,6 +238,9 @@ export default function ResultsPanel({ result }: Props) {
 
       {/* ── Chart ── */}
       <PosteriorChart variants={variants} />
+
+      {/* ── Prior sensitivity ── */}
+      <PriorSensitivityPanel result={result} />
 
       {/* ── Explainer accordion ── */}
       <ExplainerAccordion isMultiVariant={variants.length > 2} />

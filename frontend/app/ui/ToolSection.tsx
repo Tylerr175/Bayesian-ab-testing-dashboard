@@ -1,7 +1,9 @@
 'use client';
 
+import { Suspense } from 'react';
 import ScrollReveal from '@/app/ui/ScrollReveal';
 import VariantForm from '@/app/ui/VariantForm';
+import ResultsSkeleton from '@/app/ui/ResultsSkeleton';
 
 export default function ToolSection() {
   return (
@@ -24,7 +26,10 @@ export default function ToolSection() {
 
         <ScrollReveal delay={150}>
           <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <VariantForm />
+            {/* Suspense required by Next.js App Router for useSearchParams() */}
+            <Suspense fallback={<ResultsSkeleton />}>
+              <VariantForm />
+            </Suspense>
           </div>
         </ScrollReveal>
 
