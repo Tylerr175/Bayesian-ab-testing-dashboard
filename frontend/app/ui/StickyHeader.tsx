@@ -1,7 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import ThemeToggle from '@/app/ui/ThemeToggle';
+
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const pathname = usePathname();
+  const active = pathname === href;
+  return (
+    <Link
+      href={href}
+      className={[
+        'rounded px-3 py-1.5 text-xs font-medium transition-colors duration-150 sm:text-sm',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2',
+        'dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-zinc-950',
+        active
+          ? 'text-indigo-600 dark:text-indigo-400'
+          : 'text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200',
+      ].join(' ')}
+    >
+      {children}
+    </Link>
+  );
+}
 
 function GitHubIcon() {
   return (
@@ -36,10 +58,10 @@ export default function StickyHeader() {
             : 'border-transparent'
         }`}
       >
-        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-6 sm:px-8">
+        <div className="mx-auto flex h-14 max-w-3xl items-center px-6 sm:px-8">
 
           {/* Wordmark */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex shrink-0 items-center gap-2.5">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 shadow-inner">
               <span className="text-sm font-bold leading-none text-white">β</span>
             </div>
@@ -53,8 +75,14 @@ export default function StickyHeader() {
             </div>
           </div>
 
+          {/* Nav */}
+          <nav className="flex flex-1 items-center justify-center gap-1" aria-label="Main navigation">
+            <NavLink href="/">Analyze</NavLink>
+            <NavLink href="/estimator">Estimate</NavLink>
+          </nav>
+
           {/* Right side */}
-          <div className="flex items-center gap-4">
+          <div className="flex shrink-0 items-center gap-4">
             <a
               href="https://github.com/Tylerr175/Bayesian-ab-testing-dashboard"
               target="_blank"

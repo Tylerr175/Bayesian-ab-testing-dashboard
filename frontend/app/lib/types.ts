@@ -28,3 +28,22 @@ export interface AnalyzeResponse {
   variants: VariantResult[];
   recommendation: Recommendation;
 }
+
+export interface EstimatePayload {
+  baseline_rate: number;
+  minimum_lift: number;
+  confidence_threshold: number;
+}
+
+export interface PowerCurvePoint {
+  sample_size: number;
+  power: number;
+}
+
+export interface EstimateResponse {
+  sample_size_per_variant: number;
+  total_sample_size: number;
+  power_achieved: number;
+  feasible: boolean;
+  power_curve: PowerCurvePoint[];
+}
