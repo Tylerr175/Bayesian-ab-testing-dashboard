@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { HelpCircle } from 'lucide-react';
 import type { EstimatePayload, EstimateResponse } from '@/app/lib/types';
+import { extractApiError } from '@/app/lib/api';
 import EstimatorResults from '@/app/ui/EstimatorResults';
 
 const API_URL = `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}/api/estimate-sample-size`;
@@ -34,15 +35,6 @@ function FieldTooltip({ text }: { text: string }) {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-async function extractApiError(res: Response): Promise<string> {
-  try {
-    const body = await res.json();
-    if (typeof body.detail === 'string') return body.detail;
-    if (Array.isArray(body.detail))
-      return body.detail.map((e: { msg: string }) => e.msg).join('; ');
-  } catch { /* ignore */ }
-  return `Unexpected error (HTTP ${res.status})`;
-}
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
@@ -52,6 +44,7 @@ export default function EstimatorForm() {
   const baseId     = useId();
   const formRef    = useRef<HTMLFormElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const abortRef   = useRef<AbortController | null>(null);
 
   const [baselineRate,        setBaselineRate]        = useState('');
   const [minimumLift,         setMinimumLift]         = useState('');
@@ -63,6 +56,10 @@ export default function EstimatorForm() {
   const [result,              setResult]              = useState<EstimateResponse | null>(null);
   const [submittedLift,       setSubmittedLift]       = useState(0);
   const [submittedTraffic,    setSubmittedTraffic]    = useState<number | null>(null);
+
+  // ── Abort any in-flight request when the component unmounts ──────────────
+
+  useEffect(() => () => { abortRef.current?.abort(); }, []);
 
   useEffect(() => {
     if (result && resultsRef.current) {
@@ -109,6 +106,11 @@ export default function EstimatorForm() {
       confidence_threshold: parseFloat(confidenceThreshold),
     };
 
+    // Cancel any previous in-flight request before starting a new one
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setIsLoading(true);
     setApiError(null);
     setResult(null);
@@ -118,17 +120,20 @@ export default function EstimatorForm() {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(payload),
+        signal:  controller.signal,
       });
       if (!res.ok) { setApiError(await extractApiError(res)); return; }
       setSubmittedLift(payload.minimum_lift);
       setSubmittedTraffic(dailyTraffic.trim() ? parseInt(dailyTraffic, 10) : null);
       setResult(await res.json());
     } catch (err) {
+      if (controller.signal.aborted) return; // intentional cancel — discard silently
       setApiError(err instanceof TypeError
         ? 'Could not reach the backend. Is the server running on port 8000?'
         : 'An unexpected error occurred. Check the browser console for details.');
     } finally {
-      setIsLoading(false);
+      // Only clear loading state if this request is still the active one
+      if (!controller.signal.aborted) setIsLoading(false);
     }
   }
 

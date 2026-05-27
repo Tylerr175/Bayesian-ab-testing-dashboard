@@ -85,10 +85,10 @@ class AnalyzeRequest(BaseModel):
     b_visitors:    Optional[int] = Field(default=None, ge=0, le=10_000_000)
     b_conversions: Optional[int] = Field(default=None, ge=0, le=10_000_000)
 
-    prior_alpha:    float = Field(default=1.0, gt=0)
-    prior_beta:     float = Field(default=1.0, gt=0)
+    prior_alpha:    float = Field(default=1.0, gt=0, le=1_000)
+    prior_beta:     float = Field(default=1.0, gt=0, le=1_000)
     n_samples:      int   = Field(default=10_000, gt=0, le=200_000)
-    stop_threshold: float = Field(default=0.005, gt=0)
+    stop_threshold: float = Field(default=0.005, gt=0, le=0.5)
 
     @model_validator(mode="after")
     def resolve_variants(self) -> "AnalyzeRequest":

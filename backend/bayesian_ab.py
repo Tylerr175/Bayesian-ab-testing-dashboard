@@ -150,23 +150,28 @@ def estimate_sample_size(
         # Per-N deterministic seeding keeps binary search stable across repeated evals.
         sub_seed = None if seed is None else (seed * 1_000_003 + n) % (2 ** 31)
         rng = np.random.default_rng(sub_seed)
-        ctrl_conv = rng.binomial(n, baseline_rate, size=N_SIMS)
-        trt_conv  = rng.binomial(n, treatment_rate, size=N_SIMS)
-        successes = 0
-        for i in range(N_SIMS):
-            result = analyze_ab_test(
-                [
-                    {"name": "control",   "visitors": n, "conversions": int(ctrl_conv[i])},
-                    {"name": "treatment", "visitors": n, "conversions": int(trt_conv[i])},
-                ],
-                n_samples=N_MC,
-            )
-            trt_prob = next(
-                v["prob_best"] for v in result["variants"] if v["name"] == "treatment"
-            )
-            if trt_prob >= confidence_threshold:
-                successes += 1
-        _cache[n] = successes / N_SIMS
+
+        # Simulate N_SIMS experiments: draw conversion counts from binomials
+        ctrl_conv = rng.binomial(n, baseline_rate, size=N_SIMS)  # (N_SIMS,)
+        trt_conv  = rng.binomial(n, treatment_rate, size=N_SIMS) # (N_SIMS,)
+
+        # Posterior parameters for all sims at once (Beta-Binomial conjugate update)
+        a_ctrl = 1.0 + ctrl_conv        # (N_SIMS,)
+        b_ctrl = 1.0 + n - ctrl_conv    # (N_SIMS,)
+        a_trt  = 1.0 + trt_conv         # (N_SIMS,)
+        b_trt  = 1.0 + n - trt_conv     # (N_SIMS,)
+
+        # Sample N_MC draws from each posterior for every sim simultaneously.
+        # Shape: (N_SIMS, N_MC) — rows are experiments, columns are MC draws.
+        ctrl_samples = rng.beta(a_ctrl[:, None], b_ctrl[:, None], size=(N_SIMS, N_MC))
+        trt_samples  = rng.beta(a_trt[:, None],  b_trt[:, None],  size=(N_SIMS, N_MC))
+
+        # prob_best(treatment) per sim = fraction of MC draws where trt > ctrl.
+        # For two variants this is equivalent to argmax == treatment_idx.
+        trt_prob_best = np.mean(trt_samples > ctrl_samples, axis=1)  # (N_SIMS,)
+
+        # Power = fraction of sims where treatment clears the confidence threshold
+        _cache[n] = float(np.mean(trt_prob_best >= confidence_threshold))
         return _cache[n]
 
     cap_power = power_at(N_MAX)

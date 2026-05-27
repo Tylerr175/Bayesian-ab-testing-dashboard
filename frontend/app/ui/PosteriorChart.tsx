@@ -43,10 +43,10 @@ const N_POINTS = 320;
 
 type ChartPoint = { x: number; [key: string]: number };
 
-function buildSeries(variants: VariantResult[]): ChartPoint[] {
+function buildSeries(variants: VariantResult[]): { data: ChartPoint[]; lo: number; hi: number } {
   const { lo, hi } = buildChartRange(variants);
   const step = (hi - lo) / (N_POINTS - 1);
-  return Array.from({ length: N_POINTS }, (_, i) => {
+  const data = Array.from({ length: N_POINTS }, (_, i) => {
     const x = lo + i * step;
     const point: ChartPoint = { x };
     variants.forEach((v, idx) => {
@@ -54,6 +54,7 @@ function buildSeries(variants: VariantResult[]): ChartPoint[] {
     });
     return point;
   });
+  return { data, lo, hi };
 }
 
 // ── Colour palette ─────────────────────────────────────────────────────────────
@@ -157,9 +158,8 @@ export default function PosteriorChart({ variants }: Props) {
   const { theme } = useTheme();
   const colors    = theme === 'dark' ? DARK : LIGHT;
 
-  const data        = buildSeries(variants);
-  const { lo, hi }  = buildChartRange(variants);
-  const tickFmt     = (v: number) => `${(v * 100).toFixed(1)}%`;
+  const { data, lo, hi } = buildSeries(variants);
+  const tickFmt          = (v: number) => `${(v * 100).toFixed(1)}%`;
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">

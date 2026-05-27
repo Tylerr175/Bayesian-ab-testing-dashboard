@@ -11,7 +11,7 @@ interface ScrollRevealProps {
 
 export default function ScrollReveal({ children, delay = 0, className }: ScrollRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: false, margin: '-100px' });
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
   const prefersReduced = useReducedMotion();
 
   if (prefersReduced) {

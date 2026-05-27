@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
 
 import type { AnalyzePayload, AnalyzeResponse } from '@/app/lib/types';
+import { extractApiError } from '@/app/lib/api';
 import AdvancedSettings, { type ThresholdPreset, PRESET_VALUES } from '@/app/ui/AdvancedSettings';
 import CsvUpload, { type ParsedVariant } from '@/app/ui/CsvUpload';
 import ResultsPanel from '@/app/ui/ResultsPanel';
@@ -83,15 +84,6 @@ function validateAll(variants: VariantField[]): FormErrors {
   return errors;
 }
 
-async function extractApiError(res: Response): Promise<string> {
-  try {
-    const body = await res.json();
-    if (typeof body.detail === 'string') return body.detail;
-    if (Array.isArray(body.detail))
-      return body.detail.map((e: { msg: string }) => e.msg).join('; ');
-  } catch { /* ignore */ }
-  return `Unexpected error (HTTP ${res.status})`;
-}
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -143,6 +135,7 @@ export default function VariantForm() {
   const baseId      = useId();
   const counterRef  = useRef(2); // 0 and 1 reserved for the two default variants
   const resultsRef  = useRef<HTMLDivElement>(null);
+  const abortRef    = useRef<AbortController | null>(null);
   function uid() { return `${baseId}-${counterRef.current++}`; }
 
   const [activeTab,    setActiveTab]    = useState<ActiveTab>('manual');
@@ -157,6 +150,10 @@ export default function VariantForm() {
   const [result,       setResult]       = useState<AnalyzeResponse | null>(null);
   const [thresholdPreset,  setThresholdPreset]  = useState<ThresholdPreset>('balanced');
   const [customThreshold, setCustomThreshold] = useState('');
+
+  // ── Abort any in-flight request when the component unmounts ──────────────
+
+  useEffect(() => () => { abortRef.current?.abort(); }, []);
 
   // ── Scroll to results once they arrive ────────────────────────────────────
 
@@ -211,8 +208,8 @@ export default function VariantForm() {
     let stopThreshold: number;
     if (thresholdPreset === 'custom') {
       const v = parseFloat(customThreshold);
-      if (isNaN(v) || v <= 0) {
-        setApiError('Custom threshold is invalid — open Advanced Settings and enter a positive percentage like 0.5.');
+      if (isNaN(v) || v <= 0 || v > 50) {
+        setApiError('Custom threshold is invalid — open Advanced Settings and enter a percentage between 0 and 50.');
         return;
       }
       stopThreshold = v / 100;
@@ -229,6 +226,11 @@ export default function VariantForm() {
       stop_threshold: stopThreshold,
     };
 
+    // Cancel any previous in-flight request before starting a new one
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setIsLoading(true);
     setApiError(null);
     setResult(null);
@@ -238,15 +240,18 @@ export default function VariantForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
       if (!res.ok) { setApiError(await extractApiError(res)); return; }
       setResult(await res.json());
     } catch (err) {
+      if (controller.signal.aborted) return; // intentional cancel — discard silently
       setApiError(err instanceof TypeError
         ? 'Could not reach the backend. Is the server running on port 8000?'
         : 'An unexpected error occurred. Check the browser console for details.');
     } finally {
-      setIsLoading(false);
+      // Only clear loading state if this request is still the active one
+      if (!controller.signal.aborted) setIsLoading(false);
     }
   }
 
