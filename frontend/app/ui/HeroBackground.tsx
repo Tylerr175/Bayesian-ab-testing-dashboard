@@ -109,8 +109,11 @@ export default function HeroBackground() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const isTouchPrimary = window.matchMedia('(hover: none)').matches;
-    const svg = svgRef.current;
-    if (!svg) return;
+    const svgEl = svgRef.current;
+    if (!svgEl) return;
+    // Re-capture as a non-nullable const so TypeScript preserves the type
+    // inside nested function declarations (closures don't carry narrowing).
+    const svg: SVGSVGElement = svgEl;
 
     const buf = new Float32Array(N); // shared per-frame interpolation buffer
 
