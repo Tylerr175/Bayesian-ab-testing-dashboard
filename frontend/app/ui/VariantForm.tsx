@@ -23,12 +23,12 @@ const API_URL       = `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:80
 
 // Color palette — index matches PosteriorChart's PALETTE array
 const CARD_COLORS = [
-  { dot: 'bg-indigo-500',  border: 'border-indigo-200 dark:border-indigo-800' },
-  { dot: 'bg-emerald-500', border: 'border-emerald-200 dark:border-emerald-800' },
-  { dot: 'bg-amber-500',   border: 'border-amber-200 dark:border-amber-800'   },
-  { dot: 'bg-rose-500',    border: 'border-rose-200 dark:border-rose-800'     },
-  { dot: 'bg-violet-500',  border: 'border-violet-200 dark:border-violet-800' },
-  { dot: 'bg-cyan-500',    border: 'border-cyan-200 dark:border-cyan-800'     },
+  { dot: 'bg-indigo-500',  border: 'border-indigo-200 dark:border-indigo-800'   },  // A
+  { dot: 'bg-teal-500',    border: 'border-teal-200 dark:border-teal-800'       },  // B — teal slate
+  { dot: 'bg-slate-500',   border: 'border-slate-300 dark:border-slate-600'     },  // C — powder slate
+  { dot: 'bg-fuchsia-500', border: 'border-fuchsia-200 dark:border-fuchsia-800' },  // D — magenta pink
+  { dot: 'bg-violet-500',  border: 'border-violet-200 dark:border-violet-800'   },  // E
+  { dot: 'bg-cyan-500',    border: 'border-cyan-200 dark:border-cyan-800'       },  // F
 ];
 
 // ── Types ──────────────────────────────────────────────────────────────────────

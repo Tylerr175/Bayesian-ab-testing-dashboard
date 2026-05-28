@@ -21,7 +21,7 @@ interface SensitivityRow {
   leaderName:     string;
   leaderProbBest: number;
   leaderLoss:     number;
-  action:         'STOP' | 'KEEP_TESTING';
+  action:         'STOP' | 'KEEP_TESTING' | 'EQUIVALENT';
 }
 
 // ── Pure helpers ───────────────────────────────────────────────────────────────
@@ -108,12 +108,22 @@ function allRowsAgree(rows: SensitivityRow[]): boolean {
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
-function VerdictBadge({ action }: { action: 'STOP' | 'KEEP_TESTING' }) {
-  return action === 'STOP' ? (
-    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">
-      Stop
-    </span>
-  ) : (
+function VerdictBadge({ action }: { action: 'STOP' | 'KEEP_TESTING' | 'EQUIVALENT' }) {
+  if (action === 'STOP') {
+    return (
+      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">
+        Stop
+      </span>
+    );
+  }
+  if (action === 'EQUIVALENT') {
+    return (
+      <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-zinc-700 dark:text-zinc-400">
+        Either works
+      </span>
+    );
+  }
+  return (
     <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950/50 dark:text-amber-400">
       Keep testing
     </span>
@@ -345,6 +355,11 @@ export default function PriorSensitivityPanel({ result }: Props) {
                   you&apos;re trying to detect. Collecting more data will reduce this sensitivity.
                 </>
               )}
+              <p className="mt-2 text-xs opacity-70">
+                Note: these priors are centered on your observed conversion rate (empirical Bayes)
+                — a useful robustness check, but not a substitute for a domain-informed prior if
+                you have strong historical expectations.
+              </p>
             </div>
           )}
 

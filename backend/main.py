@@ -87,7 +87,7 @@ class AnalyzeRequest(BaseModel):
 
     prior_alpha:    float = Field(default=1.0, gt=0, le=1_000)
     prior_beta:     float = Field(default=1.0, gt=0, le=1_000)
-    n_samples:      int   = Field(default=10_000, gt=0, le=200_000)
+    n_samples:      int   = Field(default=50_000, gt=0, le=200_000)
     stop_threshold: float = Field(default=0.005, gt=0, le=0.5)
 
     @model_validator(mode="after")
@@ -140,8 +140,8 @@ class VariantResult(BaseModel):
 
 
 class Recommendation(BaseModel):
-    action: str            # "STOP" | "KEEP_TESTING"
-    winner: Optional[str]  # variant name, or None when action is KEEP_TESTING
+    action: str            # "STOP" | "KEEP_TESTING" | "EQUIVALENT"
+    winner: Optional[str]  # variant name for STOP; None for KEEP_TESTING and EQUIVALENT
     winner_loss: float
     threshold: float
 
@@ -234,16 +234,33 @@ def analyze(request: Request, req: AnalyzeRequest) -> AnalyzeResponse:
 
     winner_loss = results["winner_expected_loss"]
     winner_name = results["winner"]
-    action      = "STOP" if winner_loss < req.stop_threshold else "KEEP_TESTING"
+
+    # Two-gate stopping rule:
+    #   Gate 1 — risk: expected loss must be below the stop threshold.
+    #   Gate 2 — effect: the lift must also exceed the stop threshold.
+    #
+    # When gate 1 passes but gate 2 fails, both variants convert at essentially
+    # the same rate. The cost of being wrong is tiny because the true difference
+    # is itself tiny — so we call it EQUIVALENT rather than declaring a winner.
+    sorted_vars = sorted(results["variants"], key=lambda v: v["prob_best"], reverse=True)
+    lift = sorted_vars[0]["posterior_mean"] - sorted_vars[1]["posterior_mean"]
+
+    if winner_loss >= req.stop_threshold:
+        action = "KEEP_TESTING"
+    elif lift >= req.stop_threshold:
+        action = "STOP"
+    else:
+        action = "EQUIVALENT"
 
     names  = [v["name"] for v in results["variants"]]
     rates  = [f"{v['posterior_mean'] * 100:.1f}%" for v in results["variants"]]
     logger.info(
-        "analyze | %s | winner=%s  action=%s  loss=%.4f%%",
+        "analyze | %s | winner=%s  action=%s  loss=%.4f%%  lift=%.4f%%",
         "  ".join(f"{n}={r}" for n, r in zip(names, rates)),
         winner_name if action == "STOP" else "-",
         action,
         winner_loss * 100,
+        lift * 100,
     )
 
     variant_results = []

@@ -18,8 +18,8 @@ export interface VariantResult {
 }
 
 export interface Recommendation {
-  action: 'STOP' | 'KEEP_TESTING';
-  winner: string | null;  // variant name, or null when still testing
+  action: 'STOP' | 'KEEP_TESTING' | 'EQUIVALENT';
+  winner: string | null;  // variant name for STOP; null for KEEP_TESTING and EQUIVALENT
   winner_loss: number;
   threshold: number;
 }

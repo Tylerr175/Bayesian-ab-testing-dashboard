@@ -16,7 +16,8 @@ export const metadata: Metadata = {
   },
 };
 
-// Purely decorative background — two posterior distribution curves that tie
+// Purely decorative background — a single S-curve that flows from the
+// bottom-left corner through the viewport centre to the top-right, tying
 // the visual identity to the Bayesian domain without cluttering the UI.
 // Rendered as a server component (no JS), fixed behind all content.
 function BetaCurveBackground() {
@@ -26,42 +27,28 @@ function BetaCurveBackground() {
       className="pointer-events-none fixed inset-0 overflow-hidden"
       style={{ zIndex: -1 }}
     >
-      {/* Top-right — narrow, well-identified posterior */}
       <svg
-        style={{ position: "absolute", top: -60, right: -60, width: 620, height: 460, opacity: 0.07 }}
-        viewBox="0 0 620 460"
+        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", opacity: 0.12 }}
+        viewBox="0 0 1440 900"
+        preserveAspectRatio="xMidYMid slice"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <linearGradient id="bgCurveA" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#8b5cf6" />
-            <stop offset="100%" stopColor="#d946ef" />
-          </linearGradient>
-        </defs>
-        <path
-          d="M 0 420 C 80 410 200 60 330 30 C 460 0 540 380 620 420"
-          fill="none"
-          stroke="url(#bgCurveA)"
-          strokeWidth="2.5"
-        />
-      </svg>
-
-      {/* Bottom-left — wider, more diffuse prior */}
-      <svg
-        style={{ position: "absolute", bottom: -60, left: -60, width: 540, height: 360, opacity: 0.06 }}
-        viewBox="0 0 540 360"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <linearGradient id="bgCurveB" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#6366f1" />
+          {/* Gradient follows the curve direction: bottom-left → top-right */}
+          <linearGradient id="bgCurve" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%"   stopColor="#6366f1" />
             <stop offset="100%" stopColor="#8b5cf6" />
           </linearGradient>
         </defs>
+        {/*
+          S-curve: starts off-screen bottom-left, arcs to upper half,
+          passes through the viewport centre, then arcs back down and
+          sweeps up to off-screen top-right.
+        */}
         <path
-          d="M 0 320 C 60 310 140 60 270 40 C 400 20 470 300 540 320"
+          d="M -60 920 C 200 920 480 -60 720 460 C 960 980 1240 -60 1500 -60"
           fill="none"
-          stroke="url(#bgCurveB)"
+          stroke="url(#bgCurve)"
           strokeWidth="2.5"
         />
       </svg>

@@ -61,9 +61,9 @@ function buildSeries(variants: VariantResult[]): { data: ChartPoint[]; lo: numbe
 
 const PALETTE = [
   '#6366f1', // indigo-500  (A)
-  '#10b981', // emerald-500 (B)
-  '#f59e0b', // amber-500   (C)
-  '#f43f5e', // rose-500    (D)
+  '#14b8a6', // teal-500    (B) — teal slate
+  '#64748b', // slate-500   (C) — powder slate
+  '#d946ef', // fuchsia-500 (D) — magenta pink
   '#8b5cf6', // violet-500  (E)
   '#06b6d4', // cyan-500    (F)
 ];

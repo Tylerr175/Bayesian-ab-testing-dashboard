@@ -3,11 +3,18 @@
 import { ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ScrollReveal from '@/app/ui/ScrollReveal';
+import HeroBackground from '@/app/ui/HeroBackground';
 
 export default function HeroSection() {
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center px-6 pb-24 pt-16 sm:px-8">
-      <div className="mx-auto max-w-2xl text-center">
+    <section className="relative overflow-hidden flex min-h-screen flex-col items-center justify-center px-6 pb-24 pt-16 sm:px-8 bg-white dark:bg-zinc-950">
+
+      {/* Beta distribution curves — decorative background, never interactive */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <HeroBackground />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-2xl text-center">
 
         {/* Label chip — above fold, no scroll animation needed */}
         <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600 dark:border-indigo-800/60 dark:bg-indigo-950/50 dark:text-indigo-400">
@@ -39,8 +46,14 @@ export default function HeroSection() {
         </div>
       </div>
 
+      {/* Bottom fade — blends hero curves into the page background */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-48 bg-gradient-to-b from-transparent to-white dark:to-zinc-950"
+      />
+
       {/* Scroll indicator — fades in after content, then bounces gently forever */}
-      <ScrollReveal delay={300} className="absolute bottom-10 left-1/2 -translate-x-1/2">
+      <ScrollReveal delay={300} className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2">
         <a
           href="#explainer"
           aria-label="Scroll to learn more"

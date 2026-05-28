@@ -56,6 +56,15 @@ const ITEMS: Item[] = [
     ],
   },
   {
+    question: 'What does this analysis assume?',
+    paragraphs: [
+      `Independence: every visitor's conversion is treated as independent of every other. This breaks down when users share accounts, when your product has social or network effects (one user's action influences another's), or when the same person can appear in both variants.`,
+      `Stationarity: the true conversion rate is assumed to be stable over the life of the test. Day-of-week patterns, seasonality, a simultaneous marketing push, or a site change mid-experiment can all shift rates in ways the model can't detect.`,
+      `Novelty effects: users often engage with anything that's new or different, regardless of whether it's actually better. That initial bump fades. Run for at least two full business cycles — typically two weeks minimum — before trusting a result.`,
+      `Practical significance: a statistically confident result can still be too small to act on. A 0.05% lift at 99% probability might not justify an engineering sprint. Always compare the expected lift to the cost of shipping the change before calling it a win.`,
+    ],
+  },
+  {
     question: 'How is this different from frequentist A/B testing?',
     paragraphs: [
       `Frequentist testing asks: "Assuming there's no real difference, how surprising is this data?" A p-value below 0.05 just means the result would be unlikely if nothing were going on — it says nothing about the probability that B is actually better.`,
