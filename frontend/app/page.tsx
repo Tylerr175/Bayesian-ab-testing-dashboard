@@ -8,12 +8,6 @@ import ToolSection from '@/app/ui/ToolSection';
 import SectionDivider from '@/app/ui/SectionDivider';
 import Footer from '@/app/ui/Footer';
 
-const HOME_RESOURCES = [
-  { label: 'How it works', href: '#explainer' },
-  { label: 'Methodology',  href: 'https://github.com/Tylerr175/Bayesian-ab-testing-dashboard#methodology' },
-  { label: 'GitHub repo',  href: 'https://github.com/Tylerr175/Bayesian-ab-testing-dashboard' },
-];
-
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
@@ -54,7 +48,7 @@ export default function Home() {
         <ToolSection />
       </main>
 
-      <Footer resources={HOME_RESOURCES} />
+      <Footer />
 
     </div>
   );

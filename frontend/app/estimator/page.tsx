@@ -4,11 +4,6 @@ import EstimatorForm from '@/app/ui/EstimatorForm';
 import SectionDivider from '@/app/ui/SectionDivider';
 import Footer from '@/app/ui/Footer';
 
-const ESTIMATOR_RESOURCES = [
-  { label: 'Analyzer',     href: '/' },
-  { label: 'How it works', href: '/#explainer' },
-  { label: 'GitHub repo',  href: 'https://github.com/Tylerr175/Bayesian-ab-testing-dashboard' },
-];
 
 export default function EstimatorPage() {
   return (
@@ -117,7 +112,7 @@ export default function EstimatorPage() {
 
       </main>
 
-      <Footer resources={ESTIMATOR_RESOURCES} />
+      <Footer />
 
     </div>
   );
