@@ -9,25 +9,24 @@ const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] =
     heading: 'Learn',
     links: [
       { label: 'How it works', href: '/#explainer' },
-      { label: 'Methodology', href: `${GITHUB_REPO}#methodology` },
-      { label: 'Glossary', href: '#' },
+      { label: 'Methodology',  href: `${GITHUB_REPO}#methodology` },
+      { label: 'Glossary',     href: '#' },
     ],
   },
   {
     heading: 'Build',
     links: [
-      { label: 'GitHub repo', href: GITHUB_REPO },
-      { label: 'README', href: `${GITHUB_REPO}#readme` },
+      { label: 'GitHub repo',       href: GITHUB_REPO },
       { label: 'API documentation', href: '#' },
+      { label: 'GitHub profile',    href: GITHUB_PROFILE },
     ],
   },
   {
     heading: 'Connect',
     links: [
       { label: 'LinkedIn', href: LINKEDIN },
-      { label: 'Email', href: 'mailto:tylergreenwell19@gmail.com' },
-      { label: 'Resume', href: '/Resume.pdf' },
-      { label: 'GitHub profile', href: GITHUB_PROFILE },
+      { label: 'Email',    href: 'mailto:tylergreenwell19@gmail.com' },
+      { label: 'Resume',   href: 'https://bayes-lab.vercel.app/resume.pdf' },
     ],
   },
 ];
